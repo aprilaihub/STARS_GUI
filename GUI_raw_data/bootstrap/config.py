@@ -1,0 +1,19 @@
+"""Application-level constants for the raw-data GUI."""
+
+PLOT_MODE = "CONCAT"  # "OVERLAP" or "CONCAT"
+IV_PLOT_STYLE = "LINE"  # "LINE" or "SCATTER"
+
+PRELOAD_ALL_METADATA = True
+AUTO_PLOT_FIRST_ROW = True
+LIST_SHOW_LIMIT = 500000
+META_PROGRESS_EVERY = 4000
+PRINT_TIMING = True
+
+PLOT1_X_DEFAULT = "linear"
+PLOT1_Y_DEFAULT = "linear"
+
+PLOT2_X_DEFAULT = "linear"
+PLOT2_Y_DEFAULT = "log10"
+
+PLOT3_X_DEFAULT = "linear"
+PLOT3_Y_DEFAULT = "linear"
