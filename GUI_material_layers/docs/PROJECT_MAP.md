@@ -1,29 +1,47 @@
-# Project Map (Readable)
+# Project Map
 
-## If you want to edit SQL/data
-- File: `sql/db_ops.py`
-- DB files: `db/*.db`
-- SQL references: `sql/*.sql`
+Use this as the quick "where do I edit this?" guide.
 
-## If you want to edit main page UI
-- File: `ui/main_window.py`
+## Startup Or Database Picking
 
-## If you want to edit popup dialogs
-- NMLC dialog: `ui/dialogs/nested_cycle_dialog.py`
-- Material selector: `ui/dialogs/material_selector_dialog.py`
-- Save recipe: `ui/dialogs/save_recipe_dialog.py`
-- Load/delete recipe: `ui/dialogs/load_recipe_dialog.py`
+- `run.py`
+  - Big-database picker, validation, and app bootstrap
+- `bootstrap/config.py`
+  - Default paths and config object
+- `bootstrap/container.py`
+  - Repository/service wiring
 
-## If you want to edit business behavior (without SQL)
+## Main Editor UI
+
+- `ui/main_window.py`
+  - Main page layout, drag/drop flow, autosave, and recipe actions
+- `ui/style.py`
+  - Theme helpers
+
+## Dialogs
+
+- `ui/dialogs/nested_cycle_dialog.py`
+  - ALD nested material/gas/cycle editor
+- `ui/dialogs/material_selector_dialog.py`
+  - Selector popup for material-like values
+- `ui/dialogs/save_recipe_dialog.py`
+  - Save current working state as a recipe
+- `ui/dialogs/load_recipe_dialog.py`
+  - Load, replace, or delete recipe-side data
+
+## Business Logic
+
 - `logic/process_service.py`
+  - Working-state process behavior
 - `logic/recipe_service.py`
-
-## If you want to edit tool/layer definitions
+  - Recipe save/load/replace behavior
 - `logic/enums.py`
 - `logic/params.py`
 - `logic/models.py`
 
-## If startup/config fails
-- `run.py`
-- `bootstrap/config.py`
-- `bootstrap/container.py`
+## SQL And Schema
+
+- `sql/db_ops.py`
+  - Repository implementations and runtime schema ensure logic
+- `sql/*.sql`
+  - Reference schema dumps and migration notes

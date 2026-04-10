@@ -1,19 +1,33 @@
 # STARS_GUI
 
-GUI workspace for STARS: Semiconductor Traceability and AI-assisted Research System.
+This workspace currently centers on three package-style GUI folders:
 
-## Main GUI Areas
-
+- `GUI_feature_switching/`
+  - Switching-fit inspection GUI for `Database_NEW_V2.db`
+  - entry: `python GUI_feature_switching/run.py [path/to/database.db]`
 - `GUI_material_layers/`
-  - Material/layer process GUI in split-project layout.
+  - Material/layer process GUI with a fixed working DB plus a selected big database
+  - entry: `python GUI_material_layers/run.py [path/to/Database_NEW_V2.db]`
 - `GUI_raw_data/`
-  - Experiment raw-data GUI in split-project layout.
+  - Raw experiment browser and plotting GUI
+  - entry: `python GUI_raw_data/run.py [path/to/database.db]`
+
+## Shared Files
+
+- `Database_NEW_V2.db`
+  - Main experiment database used by the raw-data and switching GUIs, and as the big database for material recipes
+- `schema.sql`
+  - Schema reference snapshot
 - `GUI_raw_data.py`
-  - Thin compatibility launcher for the raw-data GUI.
+  - Compatibility launcher for `GUI_raw_data/run.py`
 
-## Database Context
+## Folder Guide
 
-- Main experiment database:
-  - `Database_NEW_V2.db`
-- Schema reference:
-  - `schema.sql`
+- `GUI_feature_switching/`
+  - Structured switching-fit GUI with `bootstrap/`, `ui/`, `sql/`, `logic/`, and `fitting_model/`
+- `GUI_material_layers/`
+  - Structured process GUI with split working/recipe database handling
+- `GUI_raw_data/`
+  - Structured raw-data GUI with focused docs for load flow and edit points
+
+Each of the three GUI folders keeps its own `README.md` and `docs/` notes for package-specific details.

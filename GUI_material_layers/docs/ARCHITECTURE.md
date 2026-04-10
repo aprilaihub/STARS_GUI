@@ -1,42 +1,47 @@
-# Architecture Draft
+# Architecture
 
-## 1. Startup Flow
+## Startup Flow
 
-`run.py` -> big-database picker/validation -> `bootstrap.config.AppConfig` -> `bootstrap.container.build_container` -> `ui.main_window.MainWindow`
+`run.py` -> big-database picker/validation -> `bootstrap/config.py` -> `bootstrap/container.py` -> `ui/main_window.py`
 
-Container wiring:
+## Container Wiring
+
 - `sql.db_ops.SQLiteWorkingProcessRepository`
 - `sql.db_ops.SQLiteRecipeRepository`
 - `logic.process_service.ProcessService`
 - `logic.recipe_service.RecipeService`
 
-## 2. Layer Responsibilities
+`build_container(...)` assembles these once, then the main window talks only to the services.
 
-- `logic/`
-  - Defines tool/layer types and process models.
-  - Implements update/save/load business rules.
-- `sql/`
-  - Owns SQLite schema creation and SQL queries.
-  - Persists process steps, candidates, recipes, attachments, and NMLC tree.
-  - `db_ops.py` now also keeps runtime schema ensure logic.
+## Responsibilities
+
 - `ui/`
-  - Renders main page and dialogs.
-  - Calls services only, no direct SQL in normal flow.
+  - Main window, dialogs, drag/drop flow, and widget state
+- `logic/`
+  - Process-step behavior, recipe save/load/replace rules, enums, and models
+- `sql/`
+  - SQLite repositories plus schema ensure logic for both the working DB and the big database
 - `bootstrap/`
-  - Path config and dependency assembly.
+  - Startup config and dependency assembly
 
-## 3. UI Breakdown
+## Database Split
 
-- Main page:
-  - `ui/main_window.py`
-- Dialogs:
-  - `ui/dialogs/nested_cycle_dialog.py`
-  - `ui/dialogs/material_selector_dialog.py`
-  - `ui/dialogs/save_recipe_dialog.py`
-  - `ui/dialogs/load_recipe_dialog.py`
+- Working DB:
+  - `db/Manufacture_Process_Database.db`
+  - owned by this package for the editable working state
+- Big database:
+  - selected at startup, normally `../Database_NEW_V2.db`
+  - used for recipe-side save/load/replace operations
 
-## 4. Database Entry Points
+The startup picker only targets the big database. The working DB stays fixed.
 
-- Working DB path: `db/Manufacture_Process_Database.db`
-- Recipe DB path: selected at startup, default target `../Database_NEW_V2.db`
-- SQL implementation file: `sql/db_ops.py`
+## Main Files
+
+- `ui/main_window.py`
+  - Main editor and recipe operations
+- `sql/db_ops.py`
+  - Repository implementations and runtime schema setup
+- `logic/process_service.py`
+  - Working-state operations
+- `logic/recipe_service.py`
+  - Save/load/replace recipe behavior

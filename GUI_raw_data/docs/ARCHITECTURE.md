@@ -2,37 +2,40 @@
 
 ## Runtime Path
 
-`GUI_raw_data/run.py` -> `bootstrap/qt_app.py` -> `ui/main_window.py`
+`run.py` -> `bootstrap/qt_app.py` -> `ui/main_window.py`
 
-## Design Goal
+## Responsibilities
 
-Keep the package easy to read in one pass:
-- `ui/` coordinates the user flow
-- `sql/` owns direct database access
-- `logic/` stays pure and reusable
-- `bootstrap/` only handles startup and shared config
+- `bootstrap/`
+  - High-DPI setup and shared GUI constants
+- `ui/`
+  - Main user flow, list handling, metadata display, and plotting
+- `sql/`
+  - Read-only schema validation, metadata preload, point fetches, and exports
+- `logic/`
+  - Pure helpers for parsing and axis transforms
 
 ## Dependency Direction
 
-- `ui/` may import from `bootstrap/`, `logic/`, and `sql/`
-- `sql/` should not depend on `ui/`
-- `logic/` should stay free of Qt and SQLite side effects
-- `bootstrap/` should stay thin and startup-focused
+- `ui/` may import `bootstrap/`, `logic/`, and `sql/`
+- `sql/` stays independent of `ui/`
+- `logic/` stays free of Qt and SQLite side effects
+- `bootstrap/` stays thin and startup-focused
 
 ## Main Files
 
 - `ui/main_window.py`
-  - Main window state, UI assembly, filtering, plotting, metadata display, and export flow.
+  - Main window state and end-to-end interaction flow
 - `ui/list_model.py`
-  - Virtual list model for the experiment list.
+  - Experiment list labels and list-model behavior
 - `ui/plot_panel.py`
-  - Reusable Matplotlib panel with axis-mode controls.
+  - Reusable Matplotlib panel with axis-mode selectors
 - `sql/db_ops.py`
-  - Schema validation, metadata preload, point fetches, exports, and function-row lookups.
+  - Read-only database helpers and preload logic
 
 ## Reading Order
 
 1. `ui/main_window.py`
 2. `sql/db_ops.py`
-3. `docs/LOAD_FLOW.md` if you need the startup/load path
-4. `logic/` helpers only when a specific transformation needs to change
+3. `docs/LOAD_FLOW.md`
+4. `logic/id_specs.py` or `logic/plotting.py` only when a specific helper needs to change

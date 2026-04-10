@@ -1,59 +1,57 @@
 # GUI_material_layers
 
-Readable project layout for the material process GUI.
+Structured PyQt GUI for editing material/layer process flows.
+
+This package uses two database roles:
+
+- working DB: `db/Manufacture_Process_Database.db`
+- big database: `Database_NEW_V2.db`, chosen at startup or passed on the command line
 
 ## Run
-```bash
-python run.py
-```
-
-Startup now opens a file picker for the main experiment database (`Database_NEW_V2.db`).
-You can also pass that big database path directly:
 
 ```bash
-python run.py ..\Database_NEW_V2.db
+python GUI_material_layers/run.py
 ```
 
-## Directory Guide
+Startup opens a picker for the big database. You can also pass that path directly:
 
-- `db/`: runtime databases used by this GUI.
-  - `Manufacture_Process_Database.db`
-- recipe-side DB is chosen at startup and should point to the project-level `Database_NEW_V2.db`
-- attachment model:
-  - both working db and recipe db store file payloads in `Tool_Attachment`
-  - each `Tool_*` row can point to one attachment by `attachment_id`
-  - attachment now follows `save recipe`, `load recipe`, and `replace recipe`
-- `sql/`: unified database entry, schema helpers, and SQL dumps.
-  - `db_ops.py`
-  - `*.sql`
-- `logic/`: business concepts and use-case services.
-  - `enums.py`, `models.py`, `params.py`
-  - `process_service.py`, `recipe_service.py`
-- `ui/`: GUI code.
-  - `main_window.py` (main page)
-  - `dialogs/` (small windows)
-  - `style.py` (theme helpers)
-- `bootstrap/`: app startup assembly.
-  - `config.py` (paths)
-  - `container.py` (wire repo + service)
-- `tests/`: workflow checks.
-
-## Main UI vs Dialogs
-
-- Main page:
-  - `ui/main_window.py`
-- Dialogs:
-  - `ui/dialogs/nested_cycle_dialog.py` (ALD cycle/material tree)
-  - `ui/dialogs/material_selector_dialog.py`
-  - `ui/dialogs/save_recipe_dialog.py`
-  - `ui/dialogs/load_recipe_dialog.py`
-
-## Full Flow Check
 ```bash
-python tests/full_flow_check.py
+python GUI_material_layers/run.py ..\Database_NEW_V2.db
 ```
 
-## Notes
+## Package Layout
 
-- This folder is migrated from the stable `new_material_GUI` implementation.
-- Goal is readability-first structure while keeping behavior unchanged.
+- `bootstrap/`
+  - Path config and dependency wiring
+- `ui/`
+  - Main page plus small dialogs
+- `logic/`
+  - Process and recipe services, enums, and models
+- `sql/`
+  - Schema ensure logic and SQLite repositories
+- `db/`
+  - Working DB owned by this package
+- `tests/`
+  - Full-flow check
+
+## Main Behavior
+
+- The working DB stays fixed inside this package
+- The big database is selected at startup and validated before the GUI opens
+- Recipes are saved to and loaded from the big database
+- Attachments are stored on both the working side and recipe side through `Tool_Attachment`
+
+## Docs
+
+- `docs/ARCHITECTURE.md`
+  - Startup path and module responsibilities
+- `docs/DB_MAP.md`
+  - Working DB vs big database tables
+- `docs/PROJECT_MAP.md`
+  - Shortcut for where to edit common behaviors
+
+## Check
+
+```bash
+python GUI_material_layers/tests/full_flow_check.py
+```

@@ -1,13 +1,8 @@
-# STARS Raw Data GUI
+# GUI_raw_data
 
-PyQt GUI for browsing STARS experiment raw data from a SQLite database.
+Structured PyQt GUI for browsing STARS raw experiment data from a SQLite database.
 
-The current codebase is intentionally shallow:
-- one main window class in `ui/main_window.py`
-- one SQL access layer in `sql/db_ops.py`
-- small pure helpers in `logic/`
-
-## Quick Start
+## Run
 
 Install dependencies:
 
@@ -15,57 +10,50 @@ Install dependencies:
 pip install -r GUI_raw_data/requirements.txt
 ```
 
-Run the package entry:
+Start the GUI:
 
 ```bash
 python GUI_raw_data/run.py
 ```
 
-Pass a database path if you already know which file to open:
+If you do not pass a database path, the GUI opens its database picker at startup.
+
+Open a specific database directly:
 
 ```bash
 python GUI_raw_data/run.py path/to/database.db
 ```
 
-Legacy launcher still works:
+Compatibility launcher:
 
 ```bash
 python GUI_raw_data.py
 ```
 
-## Read This First
-
-If you are changing:
-- UI flow, filters, plotting, metadata, or export: `ui/main_window.py`
-- SQL queries or preload behavior: `sql/db_ops.py`
-- experiment/device id parsing: `logic/id_specs.py`
-- plot axis transforms: `logic/plotting.py`
-
 ## Package Layout
 
 - `bootstrap/`
-  - Qt app startup and shared config values.
+  - Qt startup and shared config values
 - `ui/`
-  - Window assembly, list model, and plot widget.
-  - `main_window.py` now owns the full user flow end-to-end.
+  - Main window, experiment list model, and reusable plot panel
 - `sql/`
-  - All direct database access for validation, preload, point fetches, metadata lookup, and export.
+  - Read-only schema validation, metadata preload, point fetches, and export helpers
 - `logic/`
-  - Pure helpers with no widget or database side effects.
+  - Pure helpers for id parsing and plot transforms
 - `tests/`
-  - Import-level smoke check.
+  - Minimal import smoke check
 - `docs/`
-  - Small focused docs for architecture, load flow, and file lookup.
+  - Architecture, load flow, and edit map
 
-## Current Cleanup State
+## Main Behavior
 
-- Old `ui/mixins/` behavior has been merged into `ui/main_window.py`.
-- `GUI_raw_data.py` is only a compatibility launcher.
-- Local Python cache files under this package are ignored via `GUI_raw_data/.gitignore`.
-- The docs folder only keeps current-state documentation, not speculative rewrite notes.
+- Database access is read-only
+- The GUI opens a selected database path immediately, or shows a file picker if no path is provided
+- Metadata is preloaded once and then filtered in memory
+- Plot point data is fetched only for the current selection
 
 ## Docs
 
-- `docs/ARCHITECTURE.md`: responsibilities and dependency direction.
-- `docs/LOAD_FLOW.md`: what happens when a database is opened.
-- `docs/PROJECT_MAP.md`: where to go for common edits.
+- `docs/ARCHITECTURE.md`
+- `docs/LOAD_FLOW.md`
+- `docs/PROJECT_MAP.md`

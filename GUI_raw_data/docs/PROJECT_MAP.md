@@ -1,39 +1,38 @@
 # Project Map
 
-Use this as the "where do I edit this?" shortcut.
+Use this as the quick edit guide.
 
-## Startup and Entry
+## Startup And App Setup
 
 - `run.py`
-  - Application entry point.
+  - Entry point and optional database-path handoff
 - `bootstrap/qt_app.py`
-  - High-DPI setup and global font configuration.
+  - High-DPI setup and global fonts
 - `bootstrap/config.py`
-  - Plot defaults, preload flags, list limits, and timing toggles.
+  - Plot defaults, preload flags, and UI constants
 
 ## Main UI
 
 - `ui/main_window.py`
-  - First file to read for almost every behavior change.
-  - Owns filter widgets, list refresh, selection handling, plotting, metadata display, and export flow.
+  - First file to read for most behavior changes
 - `ui/list_model.py`
-  - Controls how experiments are labeled in the left-side list.
+  - Left-side experiment list labels
 - `ui/plot_panel.py`
-  - Shared plot panel widget used by the three center plots.
+  - Shared plot widget for the center plots
 
 ## Database Work
 
 - `sql/db_ops.py`
-  - Change this file for schema validation, metadata preload SQL, point fetching, CSV export, or function-row lookup logic.
+  - Schema validation, metadata preload SQL, point fetching, export helpers, and function-row lookups
 
 ## Pure Helpers
 
 - `logic/id_specs.py`
-  - Experiment and device id parsing such as `1,2,10-20`.
+  - Experiment/device id parsing such as `1,2,10-20`
 - `logic/plotting.py`
-  - Axis transforms and label formatting.
+  - Axis transforms and label formatting
 
 ## Tests
 
 - `tests/smoke_import.py`
-  - Minimal import check for a ready environment with GUI dependencies installed.
+  - Minimal import check for a ready GUI environment

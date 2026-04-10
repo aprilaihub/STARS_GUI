@@ -1,47 +1,58 @@
-# DB Map (Quick)
+# DB Map
 
-## Working DB (`db/Manufacture_Process_Database.db`)
+This GUI works with two different SQLite roles.
 
-- Process steps:
-  - `Layer`
-- Tool parameter tables:
-  - `Tool_ALD`
-  - `Tool_Sputter`
-  - `Tool_E_beam`
-  - `Tool_Furnace`
-- ALD nested cycle tree:
-  - `Tool_ALD_Material_Gas_Cycle_Relation`
-  - `Tool_ALD_Cycle`
-  - `Tool_ALD_Material`
-  - `Tool_ALD_Gas`
-- Candidate lists:
-  - `Available_Materials_ALD`
-  - `Available_Precursors_ALD`
-  - `Available_Gases_ALD`
-  - `Available_Materials_Sputter`
-  - `Available_Gases_Sputter`
-  - `Available_Materials_E_beam`
-  - `Available_Materials_Furnace`
-- Attachments:
-  - `Tool_Attachment`
-  - each working `Tool_*` row has nullable `attachment_id`
+## Working DB
 
-## Recipe DB (`../Database_NEW_V2.db`)
+Path: `db/Manufacture_Process_Database.db`
 
-- Recipe headers:
-  - `Recipe`
-- Recipe process steps:
-  - `Layer`
-- Recipe tool parameter tables:
-  - `Tool_ALD`, `Tool_Sputter`, `Tool_E_beam`, `Tool_Furnace`
-- Recipe ALD nested cycle tree:
-  - `Tool_ALD_Material_Gas_Cycle_Relation`
-  - `Tool_ALD_Cycle`
-  - `Tool_ALD_Material`
-  - `Tool_ALD_Gas`
-- Recipe attachments:
-  - `Tool_Attachment`
-  - each recipe-side `Tool_*` row has nullable `attachment_id`
-- Note:
-  - this GUI uses only the recipe-side material subtree in `Database_NEW_V2.db`
-  - `Wafer` / `Die` stay in the same DB but are not managed by the GUI recipe flow
+Used for the editable in-GUI process state.
+
+Main tables:
+
+- `Layer`
+- `Tool_ALD`
+- `Tool_Sputter`
+- `Tool_E_beam`
+- `Tool_Furnace`
+- `Tool_ALD_Material_Gas_Cycle_Relation`
+- `Tool_ALD_Cycle`
+- `Tool_ALD_Material`
+- `Tool_ALD_Gas`
+- `Tool_Attachment`
+
+Working-only helper tables:
+
+- `Available_Materials_ALD`
+- `Available_Precursors_ALD`
+- `Available_Gases_ALD`
+- `Available_Materials_Sputter`
+- `Available_Gases_Sputter`
+- `Available_Materials_E_beam`
+- `Available_Materials_Furnace`
+
+## Big Database
+
+Startup target: normally `../Database_NEW_V2.db`
+
+Used for recipe-side persistence.
+
+Main tables touched by this GUI:
+
+- `Recipe`
+- `Layer`
+- `Tool_ALD`
+- `Tool_Sputter`
+- `Tool_E_beam`
+- `Tool_Furnace`
+- `Tool_ALD_Material_Gas_Cycle_Relation`
+- `Tool_ALD_Cycle`
+- `Tool_ALD_Material`
+- `Tool_ALD_Gas`
+- `Tool_Attachment`
+
+Context note:
+
+- this GUI uses the recipe/material subtree inside `Database_NEW_V2.db`
+- experiment/device/wafer data may live in the same DB, but this package does not manage those flows
+- startup validation checks the selected big DB looks like the main experiment database before continuing
