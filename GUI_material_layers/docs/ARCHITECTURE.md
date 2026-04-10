@@ -2,7 +2,7 @@
 
 ## 1. Startup Flow
 
-`run.py` -> `bootstrap.config.AppConfig` -> `bootstrap.container.build_container` -> `ui.main_window.MainWindow`
+`run.py` -> big-database picker/validation -> `bootstrap.config.AppConfig` -> `bootstrap.container.build_container` -> `ui.main_window.MainWindow`
 
 Container wiring:
 - `sql.db_ops.SQLiteWorkingProcessRepository`
@@ -38,5 +38,5 @@ Container wiring:
 ## 4. Database Entry Points
 
 - Working DB path: `db/Manufacture_Process_Database.db`
-- Recipe DB path: `../Database_NEW_V2.db`
+- Recipe DB path: selected at startup, default target `../Database_NEW_V2.db`
 - SQL implementation file: `sql/db_ops.py`

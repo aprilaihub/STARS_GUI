@@ -7,11 +7,18 @@ Readable project layout for the material process GUI.
 python run.py
 ```
 
+Startup now opens a file picker for the main experiment database (`Database_NEW_V2.db`).
+You can also pass that big database path directly:
+
+```bash
+python run.py ..\Database_NEW_V2.db
+```
+
 ## Directory Guide
 
 - `db/`: runtime databases used by this GUI.
   - `Manufacture_Process_Database.db`
-- recipe-side DB is now the project-level `Database_NEW_V2.db`
+- recipe-side DB is chosen at startup and should point to the project-level `Database_NEW_V2.db`
 - attachment model:
   - both working db and recipe db store file payloads in `Tool_Attachment`
   - each `Tool_*` row can point to one attachment by `attachment_id`
