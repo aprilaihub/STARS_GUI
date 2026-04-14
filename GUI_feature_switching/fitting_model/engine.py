@@ -191,14 +191,14 @@ def pick_rate_config(
         SELECT c.id
         FROM Features_RS_switching_rate_cal_config c
         JOIN Features_RS_switching s ON s.id = c.rs_id
-        WHERE c.block_kind=? AND c.window_N=?
+        WHERE c.block_kind=? AND c.window_n=?
         ORDER BY c.id DESC
         LIMIT 1
         """,
         (str(block_kind), int(window_n)),
     ).fetchone()
     if not row:
-        raise RuntimeError(f"No rate config found for block_kind={block_kind}, window_N={window_n}")
+        raise RuntimeError(f"No rate config found for block_kind={block_kind}, window_n={window_n}")
     return int(row["id"])
 
 

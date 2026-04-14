@@ -289,7 +289,7 @@ def fetch_experiment_points(
     for eid in eids:
         cur.execute(
             """
-            SELECT resistance, amplitude_V, readvoltage
+            SELECT resistance_ohm, amplitude_V, read_voltage_V
             FROM Experimental_Detail
             WHERE experiment_id = ?
             ORDER BY id
@@ -299,8 +299,8 @@ def fetch_experiment_points(
         points = cur.fetchall()
         if points:
             amp_v = np.array([safe_float(point["amplitude_V"]) for point in points], dtype=float)
-            read_v = np.array([safe_float(point["readvoltage"]) for point in points], dtype=float)
-            resistance = np.array([safe_float(point["resistance"]) for point in points], dtype=float)
+            read_v = np.array([safe_float(point["read_voltage_V"]) for point in points], dtype=float)
+            resistance = np.array([safe_float(point["resistance_ohm"]) for point in points], dtype=float)
 
             voltage = np.where(np.isfinite(amp_v), amp_v, read_v)
             eps = 1e-30

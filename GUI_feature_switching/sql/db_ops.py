@@ -73,7 +73,7 @@ def list_rate_configs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
             c.id,
             c.rs_id,
             c.block_kind,
-            c.window_N,
+            c.window_n,
             c.created_at,
             c.note,
             s.doi AS rs_doi,
@@ -94,7 +94,7 @@ def fetch_rate_config_row(conn: sqlite3.Connection, config_id: int) -> Optional[
             c.id,
             c.rs_id,
             c.block_kind,
-            c.window_N,
+            c.window_n,
             c.created_at,
             c.note,
             s.doi AS rs_doi,
@@ -116,7 +116,7 @@ def format_rate_config_label(row: dict[str, Any]) -> str:
     created_suffix = f" | {created_at}" if created_at else ""
     return (
         f"cfg={row.get('id')} | rs={row.get('rs_id')} | "
-        f"{row.get('block_kind')} | N={row.get('window_N')}{created_suffix}"
+        f"{row.get('block_kind')} | N={row.get('window_n')}{created_suffix}"
     )
 
 
@@ -252,9 +252,9 @@ def load_experiment_series(
         """
         SELECT
             ed.id AS ed_id,
-            ed.resistance,
+            ed.resistance_ohm,
             ed.amplitude_V,
-            ed.readvoltage,
+            ed.read_voltage_V,
             ed.pulse_width_s,
             r.mean_y_ohm,
             r.mu_DR_ohm,
@@ -272,9 +272,9 @@ def load_experiment_series(
     ed_id = np.array([int(row["ed_id"]) for row in rows], dtype=np.int64)
     idx = np.arange(len(rows), dtype=np.int64)
 
-    resistance = np.array([_to_float(row["resistance"]) for row in rows], dtype=float)
+    resistance = np.array([_to_float(row["resistance_ohm"]) for row in rows], dtype=float)
     amplitude = np.array([_to_float(row["amplitude_V"]) for row in rows], dtype=float)
-    readv = np.array([_to_float(row["readvoltage"]) for row in rows], dtype=float)
+    readv = np.array([_to_float(row["read_voltage_V"]) for row in rows], dtype=float)
     pulse_width = np.array([_to_float(row["pulse_width_s"]) for row in rows], dtype=float)
 
     mean_y = np.array([_to_float(row["mean_y_ohm"]) for row in rows], dtype=float)

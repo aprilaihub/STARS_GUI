@@ -51,12 +51,12 @@ CREATE TABLE Experimental_Detail (
                         REFERENCES Experiment(id)
                         ON DELETE CASCADE,
 
-    resistance      REAL,
+    resistance_ohm  REAL,
     amplitude_V     REAL,
     pulse_width_s   REAL,
     tag             TEXT NOT NULL,                       -- Existing ArC tag semantics
     readtag         TEXT,
-    readvoltage     REAL
+    read_voltage_V  REAL
 );
 
 -- table: Features_Electroforming
@@ -96,7 +96,7 @@ CREATE TABLE Features_Electroforming_max_drop (
             r_before_ohm        REAL,
             r_after_ohm         REAL,
             drop_ratio          REAL,
-            v_electroform_volts REAL,
+            electroform_voltage_V REAL,
             created_at          TEXT NOT NULL DEFAULT (datetime('now')),
             note                TEXT,
             UNIQUE(ef_sinh_id),
@@ -315,13 +315,13 @@ CREATE TABLE Features_RS_switching_rate_cal_config (
     block_kind  TEXT NOT NULL
         CHECK (block_kind IN ('switching','volatility')),
 
-    window_N    INTEGER NOT NULL
-        CHECK (window_N >= 1),
+    window_n    INTEGER NOT NULL
+        CHECK (window_n >= 1),
 
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     note        TEXT,
 
-    UNIQUE (rs_id, block_kind, window_N)
+    UNIQUE (rs_id, block_kind, window_n)
 );
 
 -- table: Features_RS_switching_rate_cal_result

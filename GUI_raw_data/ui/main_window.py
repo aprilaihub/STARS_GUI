@@ -210,7 +210,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _build_plot_panel_column(self) -> QtWidgets.QWidget:
         self.plot_v = MplPanel(
-            "Plot 1: Voltage vs. Index (amplitude_V or readvoltage)",
+            "Plot 1: Voltage vs. Index (amplitude_V or read_voltage_V)",
             PLOT1_X_DEFAULT,
             PLOT1_Y_DEFAULT,
         )
