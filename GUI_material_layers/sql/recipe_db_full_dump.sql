@@ -510,7 +510,7 @@ CREATE TABLE "Features_Switching_Volatility_Delta_result" (
     vol_delta_ohm           REAL,
 
     -- representative switching segment voltage
-    sw_segment_voltage_v    REAL,
+    sw_segment_voltage_V    REAL,
 
     calc_ok                 INTEGER NOT NULL DEFAULT 1 CHECK (calc_ok IN (0,1)),
     reject_code             INTEGER NOT NULL DEFAULT 0 CHECK (reject_code IN (0,1,2,3,4)),
