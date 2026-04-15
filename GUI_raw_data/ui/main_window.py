@@ -87,7 +87,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ("recipe_name", "recipe_name"),
         ("die_number", "die_number"),
         ("die_type", "die_type"),
-        ("cross_section_area_um2", "cross_section_area_um2"),
+        ("cross_sectional_area_um2", "cross_sectional_area_um2"),
         ("wordline", "wordline"),
         ("bitline", "bitline"),
         ("wafer_name", "wafer_name"),
@@ -647,7 +647,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
         if filters.die_number not in (None, "") and data.get("die_number") != int(filters.die_number):
             return False
-        if filters.subdie_area not in (None, "") and data.get("cross_section_area_um2") != int(filters.subdie_area):
+        if filters.subdie_area not in (None, "") and data.get("cross_sectional_area_um2") != int(filters.subdie_area):
             return False
         if filters.wordline not in (None, "") and data.get("wordline") != int(filters.wordline):
             return False

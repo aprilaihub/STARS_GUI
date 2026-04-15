@@ -772,9 +772,9 @@ CREATE TABLE Subdie (
                                   REFERENCES Die(id)
                                   ON DELETE CASCADE,
 
-    cross_section_area_um2   INTEGER NOT NULL,                   -- Cross-sectional area in µm²
+    cross_sectional_area_um2   INTEGER NOT NULL,                   -- Cross-sectional area in µm²
 
-    UNIQUE(die_id, cross_section_area_um2)                       -- Unique per die
+    UNIQUE(die_id, cross_sectional_area_um2)                       -- Unique per die
 );
 
 -- table: Tool_ALD

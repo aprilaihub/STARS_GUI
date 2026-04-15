@@ -46,7 +46,7 @@ class ExperimentListModel(QtCore.QAbstractListModel):
             function_type = data.get("function_type") or ""
             recipe = data.get("recipe_name") or ""
             die = data.get("die_number", "")
-            area = data.get("cross_section_area_um2", "")
+            area = data.get("cross_sectional_area_um2", "")
             wordline = data.get("wordline", "")
             bitline = data.get("bitline", "")
             label = (

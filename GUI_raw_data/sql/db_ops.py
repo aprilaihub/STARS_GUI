@@ -182,7 +182,7 @@ def preload_metadata_cache(
         "FC.function_type AS function_type",
         "DV.wordline AS wordline",
         "DV.bitline AS bitline",
-        "S.cross_section_area_um2 AS cross_section_area_um2",
+        "S.cross_sectional_area_um2 AS cross_sectional_area_um2",
         "D.die_number AS die_number",
         "R.recipe_name AS recipe_name",
     ]
@@ -249,8 +249,8 @@ def preload_metadata_cache(
             unique_values["recipe"].add(str(data["recipe_name"]))
         if data.get("die_number") is not None:
             unique_values["die"].add(int(data["die_number"]))
-        if data.get("cross_section_area_um2") is not None:
-            unique_values["area"].add(int(data["cross_section_area_um2"]))
+        if data.get("cross_sectional_area_um2") is not None:
+            unique_values["area"].add(int(data["cross_sectional_area_um2"]))
         if data.get("wordline") is not None:
             unique_values["wordline"].add(int(data["wordline"]))
         if data.get("bitline") is not None:
