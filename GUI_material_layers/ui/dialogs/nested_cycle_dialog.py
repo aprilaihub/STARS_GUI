@@ -224,6 +224,7 @@ class MaterialNodeWidget(_BaseNodeWidget):
         self.precursor = ""
         self.dep_rate_value: float | None = None
         self.dep_rate_unit = "nm/cycle"
+        self.dep_time_s: float | None = None
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 1, 0, 1)
@@ -308,6 +309,8 @@ class MaterialNodeWidget(_BaseNodeWidget):
             meta_parts.append(f"Precursor: {precursor}")
         if self.dep_rate_value is not None:
             meta_parts.append(f"{self.dep_rate_value:g} {self.dep_rate_unit or 'nm/cycle'}")
+        if self.dep_time_s is not None:
+            meta_parts.append(f"{self.dep_time_s:g} s")
         self.lbl_material_meta.setText("  |  ".join(meta_parts))
         self.lbl_material_meta.setVisible(bool(meta_parts))
 
@@ -320,6 +323,7 @@ class MaterialNodeWidget(_BaseNodeWidget):
             "precursor_name": self.precursor,
             "dep_rate_value": self.dep_rate_value,
             "dep_rate_unit": self.dep_rate_unit,
+            "dep_time_s": self.dep_time_s,
         }
 
 
@@ -798,6 +802,15 @@ class NmlcInfoPanel(QFrame):
             holder = QWidget(); holder.setLayout(row)
             self.form.addRow("Deposition rate:", holder)
             self._widgets["rate_spin"] = spin; self._widgets["rate_unit"] = unit
+
+            time_spin = QDoubleSpinBox()
+            time_spin.setDecimals(6)
+            time_spin.setRange(0.0, 1e9)
+            time_spin.setSingleStep(0.1)
+            time_spin.setValue(0.0 if node.dep_time_s is None else float(node.dep_time_s))
+            time_spin.valueChanged.connect(lambda _v: self._apply_material())
+            self.form.addRow("Deposition time (s):", time_spin)
+            self._widgets["dep_time_spin"] = time_spin
             return
 
         if isinstance(node, GasNodeWidget):
@@ -874,10 +887,16 @@ class NmlcInfoPanel(QFrame):
             return
         rate_spin = self._widgets.get("rate_spin")
         rate_unit = self._widgets.get("rate_unit")
-        if not isinstance(rate_spin, QDoubleSpinBox) or not isinstance(rate_unit, QComboBox):
+        dep_time_spin = self._widgets.get("dep_time_spin")
+        if (
+            not isinstance(rate_spin, QDoubleSpinBox)
+            or not isinstance(rate_unit, QComboBox)
+            or not isinstance(dep_time_spin, QDoubleSpinBox)
+        ):
             return
         self._target.dep_rate_value = float(rate_spin.value())
         self._target.dep_rate_unit = rate_unit.currentText()
+        self._target.dep_time_s = float(dep_time_spin.value())
         self._target.update_display()
         self.dialog.apply_material_edits(self._target)
 
@@ -1185,6 +1204,7 @@ class NestedMaterialCycleDialog(QDialog):
             return
         dm = (node.desired or "").strip(); pc = (node.precursor or "").strip(); val = node.dep_rate_value
         unit = node.dep_rate_unit or "nm/cycle"
+        dep_time_s = node.dep_time_s
         db_ops.nmlc_upsert_material(
             self.db_conn,
             mgcr_id=int(node.mgcr_id),
@@ -1193,6 +1213,7 @@ class NestedMaterialCycleDialog(QDialog):
             precursor_name=pc,
             dep_rate_value=val,
             dep_rate_unit=unit,
+            dep_time_s=dep_time_s,
         )
 
     def apply_gas_edits(self, node: GasNodeWidget) -> None:
@@ -1256,6 +1277,8 @@ class NestedMaterialCycleDialog(QDialog):
             val = node.get("dep_rate_value", None)
             w.dep_rate_value = None if val is None else float(val)
             w.dep_rate_unit = str(node.get("dep_rate_unit", "nm/cycle") or "nm/cycle")
+            dep_time_s = node.get("dep_time_s", None)
+            w.dep_time_s = None if dep_time_s is None else float(dep_time_s)
             w.update_display()
 
         w.mgcr_id = int(node.get("mgcr_id")) if node.get("mgcr_id") is not None else None

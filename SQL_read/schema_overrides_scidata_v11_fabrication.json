@@ -1,0 +1,1373 @@
+{
+  "tables": {
+    "Experimental_Detail": {
+      "pipeline_stage": "Electrical Characterization",
+      "information_stored": "Stores raw operation-level measurement records for one experiment, following the ArC ONE export structure.",
+      "relationship_and_qc_note": "Stores multiple raw detail rows for one experiment and preserves operation-level traceability through experiment_id and instrument tags.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one raw measurement record in the Experimental_Detail table."
+        },
+        "experiment_id": {
+          "description": "Foreign-key link to the parent experiment to which this raw measurement record belongs. Multiple raw detail rows may be stored for a single experiment."
+        },
+        "resistance_ohm": {
+          "description": "Measured device resistance for this raw record, stored in ohms. This is the resistance value reported by the instrument for the corresponding operation entry."
+        },
+        "resistance": {
+          "description": "Measured device resistance for this raw record, stored in ohms. This is the resistance value reported by the instrument for the corresponding operation entry."
+        },
+        "amplitude_V": {
+          "description": "Applied voltage amplitude associated with the operation represented by this row, stored in volts. For write or stimulation steps, this is the operation voltage applied to the device. For read-only entries or sweep-based measurements, it may also coincide with the voltage at which the device state was probed."
+        },
+        "pulse_width_s": {
+          "description": "Operation pulse duration associated with this row, stored in seconds. This field is zero for read-only entries in the ArC raw export format and stores the pulse width for pulse-based operations."
+        },
+        "tag": {
+          "description": "Instrument operation tag identifying the type of operation represented by the row, together with optional sequence-position information. Manual operations use tags such as F, S, and P, while advanced modules use module-specific prefixes such as CT, FF, EN, or RET, typically combined with suffix markers such as _s, _i, and _e to indicate start, intermediate, and end entries."
+        },
+        "readtag": {
+          "description": "Read-mode code associated with the resistance evaluation for this row. In the ArC ONE export convention, this field follows the form RX, where X identifies the readout mode used by the instrument."
+        },
+        "read_voltage_V": {
+          "description": "Read voltage used for the resistance measurement associated with this row, stored in volts, when applicable. This field represents the voltage at which the device resistance was read out, and it may differ from amplitude_V when a programming or stimulation step is followed by a lower-voltage resistance read."
+        },
+        "readvoltage": {
+          "description": "Read voltage used for the resistance measurement associated with this row, stored in volts, when applicable. This field represents the voltage at which the device resistance was read out, and it may differ from amplitude_V when a programming or stimulation step is followed by a lower-voltage resistance read."
+        }
+      }
+    },
+    "Experiment": {
+      "pipeline_stage": "Electrical Characterization",
+      "information_stored": "Registers one executed electrical experiment on one device using one defined measurement-function configuration.",
+      "relationship_and_qc_note": "Links each experiment to one device and one function configuration, forming the parent record for raw operation rows.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one experiment record."
+        },
+        "device_id": {
+          "description": "Foreign-key link to the device on which this experiment was performed. This links the experiment to one uniquely addressable physical device in the wafer hierarchy."
+        },
+        "function_config_id": {
+          "description": "Foreign-key link to the function-configuration record that defines which measurement protocol was used for this experiment."
+        },
+        "experiment_name": {
+          "description": "Human-readable experiment identifier used for experiment-level traceability."
+        },
+        "user_name": {
+          "description": "User or operator name stored at experiment creation time."
+        },
+        "notes": {
+          "description": "Optional free-text note associated with the experiment."
+        }
+      }
+    },
+    "Function_Config": {
+      "pipeline_stage": "Electrical Characterization",
+      "information_stored": "Stores the top-level function-class record for one measurement configuration.",
+      "relationship_and_qc_note": "Constrains each configuration to one supported function type and links experiments to the matching function-specific parameter table.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one function-configuration record."
+        },
+        "function_type": {
+          "description": "Measurement function class associated with this configuration. In the current schema this is restricted to CurveTracer, ParameterFit, or ParameterFit_interRetention."
+        },
+        "notes": {
+          "description": "Optional free-text note associated with the function configuration."
+        }
+      }
+    },
+    "Function_CurveTracer": {
+      "pipeline_stage": "Electrical Characterization",
+      "information_stored": "Stores the parameter set for one CurveTracer configuration.",
+      "relationship_and_qc_note": "Holds one unique CurveTracer parameter record per function_config_id.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one CurveTracer parameter record."
+        },
+        "function_config_id": {
+          "description": "Foreign-key link to the corresponding Function_Config record for this CurveTracer parameter set."
+        },
+        "positive_voltage_max_V": {
+          "description": "Maximum positive voltage reached during the CurveTracer sweep, in volts."
+        },
+        "negative_voltage_max_V": {
+          "description": "Maximum negative voltage reached during the CurveTracer sweep, in volts."
+        },
+        "voltage_step_V": {
+          "description": "Voltage difference between adjacent sweep points for both polarities, in volts."
+        },
+        "start_voltage_V": {
+          "description": "Initial voltage used to start the CurveTracer sweep, in volts."
+        },
+        "step_width_ms": {
+          "description": "Hold time, or pulse width, of each voltage step in the CurveTracer sweep, in milliseconds."
+        },
+        "cycles": {
+          "description": "Number of consecutive I-V cycles acquired within this CurveTracer run."
+        },
+        "interpulse_time_ms": {
+          "description": "Delay between adjacent pulses, in milliseconds."
+        },
+        "positive_current_cutoff_uA": {
+          "description": "Positive compliance-current threshold used during positive-polarity sweep steps, in microamperes. A value of zero disables compliance."
+        },
+        "negative_current_cutoff_uA": {
+          "description": "Negative compliance-current threshold used during negative-polarity sweep steps, in microamperes. A value of zero disables compliance."
+        },
+        "halt_and_return": {
+          "description": "Boolean flag indicating whether the applied bias should be cut off and returned to 0 V immediately after a current threshold is exceeded."
+        },
+        "bias_type": {
+          "description": "Selected CurveTracer bias mode, such as Staircase or Pulsed."
+        },
+        "iv_span": {
+          "description": "Sweep-span or polarity-span option used for the CurveTracer measurement, for example Start towards V+, Start towards V-, Only V+, or Only V-."
+        }
+      }
+    },
+    "Function_ParameterFit": {
+      "pipeline_stage": "Electrical Characterization",
+      "information_stored": "Stores the parameter set for one ParameterFit configuration used for pulse-driven switching measurements.",
+      "relationship_and_qc_note": "Holds one unique ParameterFit parameter record per function_config_id.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one ParameterFit parameter record."
+        },
+        "function_config_id": {
+          "description": "Foreign-key link to the corresponding Function_Config record for this ParameterFit parameter set."
+        },
+        "pulses": {
+          "description": "Number of programming pulses applied within each programming-voltage segment."
+        },
+        "pulse_width_us": {
+          "description": "Pulse width of the programming pulses, in microseconds."
+        },
+        "bias_interpulse_ms": {
+          "description": "Time interval between consecutive programming pulses, in milliseconds."
+        },
+        "iv_interpulse_ms": {
+          "description": "Time interval between adjacent pulses in the optional I-V probing step, in milliseconds."
+        },
+        "iv_pulse_width_ms": {
+          "description": "Pulse width used for the optional I-V probing step, in milliseconds."
+        },
+        "iv_type": {
+          "description": "Selected I-V probing mode used when optional I-V measurement is enabled."
+        },
+        "iv_start_V": {
+          "description": "Starting voltage of the optional I-V probing step, in volts."
+        },
+        "iv_step_V": {
+          "description": "Voltage difference between adjacent points in the optional I-V probing step, in volts."
+        },
+        "run_iv": {
+          "description": "Boolean flag indicating whether the optional I-V probing step is executed together with the programming pulse train."
+        },
+        "positive_polarity_v_start_V": {
+          "description": "Initial programming voltage for the positive-polarity programming sequence, in volts."
+        },
+        "positive_polarity_v_step_V": {
+          "description": "Voltage difference between adjacent positive-polarity programming levels, in volts."
+        },
+        "positive_polarity_v_stop_V": {
+          "description": "Final or maximum programming voltage for the positive-polarity programming sequence, in volts."
+        },
+        "positive_polarity_iv_stop_V": {
+          "description": "Positive-polarity stop voltage used for the optional I-V probing step, in volts."
+        },
+        "negative_polarity_v_start_V": {
+          "description": "Initial programming voltage for the negative-polarity programming sequence, stored as a negative value in volts."
+        },
+        "negative_polarity_v_step_V": {
+          "description": "Voltage difference between adjacent negative-polarity programming levels, stored as a negative value in volts."
+        },
+        "negative_polarity_v_stop_V": {
+          "description": "Final or most negative programming voltage for the negative-polarity programming sequence, in volts."
+        },
+        "negative_polarity_iv_stop_V": {
+          "description": "Negative-polarity stop voltage used for the optional I-V probing step."
+        }
+      }
+    },
+    "Function_ParameterFit_interRetention": {
+      "pipeline_stage": "Electrical Characterization",
+      "information_stored": "Stores the parameter set for one ParameterFit_interRetention configuration.",
+      "relationship_and_qc_note": "Holds one unique ParameterFit_interRetention parameter record per function_config_id.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one ParameterFit_interRetention parameter record."
+        },
+        "function_config_id": {
+          "description": "Foreign-key link to the corresponding Function_Config record for this ParameterFit_interRetention parameter set."
+        },
+        "pulses": {
+          "description": "Number of programming pulses applied within each programming-voltage segment."
+        },
+        "pulse_width_us": {
+          "description": "Pulse width of the programming pulses, in microseconds."
+        },
+        "bias_interpulse_ms": {
+          "description": "Time interval between consecutive programming pulses, in milliseconds."
+        },
+        "positive_polarity_v_start_V": {
+          "description": "Initial programming voltage for the positive-polarity programming sequence, in volts."
+        },
+        "positive_polarity_v_step_V": {
+          "description": "Voltage difference between adjacent positive-polarity programming levels, in volts."
+        },
+        "positive_polarity_v_stop_V": {
+          "description": "Final or maximum programming voltage for the positive-polarity programming sequence, in volts."
+        },
+        "negative_polarity_v_start_V": {
+          "description": "Initial programming voltage for the negative-polarity programming sequence, stored as a negative value in volts."
+        },
+        "negative_polarity_v_step_V": {
+          "description": "Voltage difference between adjacent negative-polarity programming levels, stored as a negative value in volts."
+        },
+        "negative_polarity_v_stop_V": {
+          "description": "Final or most negative programming voltage for the negative-polarity programming sequence, in volts."
+        },
+        "interForming_readings": {
+          "description": "Number of repeated non-invasive readouts acquired within each interleaved read segment."
+        },
+        "interForming_voltage_V": {
+          "description": "Read voltage used for the non-invasive interleaved read segment, in volts."
+        },
+        "interForming_interval_ms": {
+          "description": "Time interval between consecutive non-invasive readouts in the interleaved read segment, in milliseconds."
+        }
+      }
+    },
+    "Die": {
+      "information_stored": "Stores die-level spatial records within a wafer. Each die belongs to one wafer and is identified by a die number that is unique within that wafer.",
+      "relationship_and_qc_note": "Each die is linked to one wafer; die_number is unique within each wafer.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one die record."
+        },
+        "wafer_id": {
+          "description": "Foreign-key link to the parent wafer to which this die belongs."
+        },
+        "die_number": {
+          "description": "Die index or die identifier within the wafer layout."
+        },
+        "die_type": {
+          "description": "Die design category used to distinguish major device-layout families, for example SA (standalone) or CB (crossbar)."
+        }
+      }
+    },
+    "Subdie": {
+      "information_stored": "Stores subdie-level spatial records within a die. Each subdie belongs to one die and is distinguished by its associated nominal device cross-sectional area.",
+      "relationship_and_qc_note": "Each subdie is linked to one die; the nominal device cross-sectional area distinguishes subdies within a die.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one subdie record."
+        },
+        "die_id": {
+          "description": "Foreign-key link to the parent die to which this subdie belongs."
+        },
+        "cross_sectional_area_um2": {
+          "description": "Nominal device cross-sectional area associated with the subdie, stored in square micrometres. In the current layout, this field distinguishes the discrete device-area categories represented at subdie level."
+        }
+      }
+    },
+    "Device": {
+      "information_stored": "Stores the uniquely addressable device location within a subdie. Each device belongs to one subdie and is identified by its wordline and bitline coordinates.",
+      "relationship_and_qc_note": "Each device is linked to one subdie; the wordline and bitline pair uniquely identifies the device within that subdie.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one device record."
+        },
+        "subdie_id": {
+          "description": "Foreign-key link to the parent subdie to which this device belongs."
+        },
+        "wordline": {
+          "description": "Wordline coordinate of the device within the subdie."
+        },
+        "bitline": {
+          "description": "Bitline coordinate of the device within the subdie."
+        }
+      }
+    },
+    "Features_IV_nonlinearity": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one IV nonlinearity analysis method record, including the model family, fitting voltage window, and optional provenance reference used to generate branch-wise IV nonlinearity features from CurveTracer experiments.",
+      "relationship_and_qc_note": "Defines a reusable IV nonlinearity method record that can be linked to many experiment-level sinh result rows; the fitting window is controlled by v_fit_max_V.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one IV nonlinearity method record."
+        },
+        "model_type": {
+          "description": "Model identifier used for IV nonlinearity fitting, for example sinh. This field records the analytical model family rather than experiment-specific results."
+        },
+        "v_fit_max_V": {
+          "description": "Maximum absolute voltage included in the fitting window, in volts. Only points within |V| <= v_fit_max_V are considered eligible for branch-wise IV nonlinearity fitting.",
+          "unit": "V"
+        },
+        "doi": {
+          "description": "Optional literature reference associated with the selected model or fitting method."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this IV nonlinearity method record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the analysis method record."
+        }
+      }
+    },
+    "Features_IV_nonlinearity_sinh_config": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one unique parameter set for branch-wise sinh fitting and compliance-hit detection.",
+      "relationship_and_qc_note": "Defines reusable fitting and compliance-detection settings that can be shared across many experiment-level IV nonlinearity sinh result rows.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one sinh-fitting configuration record."
+        },
+        "fit_loss": {
+          "description": "Loss function used by the sinh fitting procedure, for example soft_l1."
+        },
+        "fit_f_scale": {
+          "description": "Scale parameter used by the selected fitting loss function.",
+          "unit": "dimensionless"
+        },
+        "min_points_per_branch": {
+          "description": "Minimum number of valid points required for attempting a branch-wise fit.",
+          "unit": "count"
+        },
+        "max_points_per_branch": {
+          "description": "Optional maximum number of points retained for each branch during fitting. If null, no explicit upper cap is applied.",
+          "unit": "count"
+        },
+        "comp_rel_tol": {
+          "description": "Relative tolerance applied when determining whether measured current is close enough to the configured compliance current for branch-level compliance-hit detection.",
+          "unit": "dimensionless"
+        },
+        "comp_abs_tol_uA": {
+          "description": "Absolute tolerance, in microamperes, applied when determining whether measured current is close enough to the configured compliance current for branch-level compliance-hit detection.",
+          "unit": "uA"
+        },
+        "comp_min_points": {
+          "description": "Minimum number of qualifying points required to mark a branch as having reached the configured compliance current within the fitting window.",
+          "unit": "count"
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this sinh-fitting configuration record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the sinh-fitting configuration."
+        }
+      }
+    },
+    "Features_IV_nonlinearity_sinh": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores branch-wise raw IV nonlinearity fitting results for one experiment using the sinh model. Branches follow the fitting-window traversal directions pos_up, pos_down, neg_down, and neg_up.",
+      "relationship_and_qc_note": "Each result row links one experiment to one IV nonlinearity method record and one sinh-fitting configuration, and stores branch-wise fitted parameters, raw fit quality, point counts, compliance-hit indicators, and an overall result-completeness status.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one branch-wise IV nonlinearity sinh result record."
+        },
+        "ivnl_id": {
+          "description": "Foreign-key link to the parent IV nonlinearity method record that defines the model family and fitting voltage window for this result."
+        },
+        "sinh_config_id": {
+          "description": "Foreign-key link to the sinh-fitting configuration record used to generate this result."
+        },
+        "experiment_id": {
+          "description": "Foreign-key link to the experiment from which this branch-wise IV nonlinearity result was derived."
+        },
+        "pos_up_a": {
+          "description": "Fitted a parameter for the pos_up branch (0 -> +Vfit) in the branch-wise sinh model I(V) = a * sinh(bV)."
+        },
+        "pos_up_b": {
+          "description": "Fitted b parameter for the pos_up branch (0 -> +Vfit) in the branch-wise sinh model I(V) = a * sinh(bV)."
+        },
+        "pos_up_r2_raw": {
+          "description": "Raw coefficient of determination for the pos_up branch (0 -> +Vfit) sinh fit. This value is stored without clamping or binarization.",
+          "unit": "dimensionless"
+        },
+        "pos_up_npts": {
+          "description": "Number of valid points used for fitting the pos_up branch (0 -> +Vfit).",
+          "unit": "count"
+        },
+        "pos_up_comp_hit": {
+          "description": "Branch-level indicator of whether the configured compliance current was reached within the fitting window for the pos_up branch (0 -> +Vfit). Stored as 0 or 1, and may be null when compliance is not configured for that polarity."
+        },
+        "pos_down_a": {
+          "description": "Fitted a parameter for the pos_down branch (+Vfit -> 0) in the branch-wise sinh model I(V) = a * sinh(bV)."
+        },
+        "pos_down_b": {
+          "description": "Fitted b parameter for the pos_down branch (+Vfit -> 0) in the branch-wise sinh model I(V) = a * sinh(bV)."
+        },
+        "pos_down_r2_raw": {
+          "description": "Raw coefficient of determination for the pos_down branch (+Vfit -> 0) sinh fit. This value is stored without clamping or binarization.",
+          "unit": "dimensionless"
+        },
+        "pos_down_npts": {
+          "description": "Number of valid points used for fitting the pos_down branch (+Vfit -> 0).",
+          "unit": "count"
+        },
+        "pos_down_comp_hit": {
+          "description": "Branch-level indicator of whether the configured compliance current was reached within the fitting window for the pos_down branch (+Vfit -> 0). Stored as 0 or 1, and may be null when compliance is not configured for that polarity."
+        },
+        "neg_down_a": {
+          "description": "Fitted a parameter for the neg_down branch (0 -> -Vfit) in the branch-wise sinh model I(V) = a * sinh(bV)."
+        },
+        "neg_down_b": {
+          "description": "Fitted b parameter for the neg_down branch (0 -> -Vfit) in the branch-wise sinh model I(V) = a * sinh(bV)."
+        },
+        "neg_down_r2_raw": {
+          "description": "Raw coefficient of determination for the neg_down branch (0 -> -Vfit) sinh fit. This value is stored without clamping or binarization.",
+          "unit": "dimensionless"
+        },
+        "neg_down_npts": {
+          "description": "Number of valid points used for fitting the neg_down branch (0 -> -Vfit).",
+          "unit": "count"
+        },
+        "neg_down_comp_hit": {
+          "description": "Branch-level indicator of whether the configured compliance current was reached within the fitting window for the neg_down branch (0 -> -Vfit). Stored as 0 or 1, and may be null when compliance is not configured for that polarity."
+        },
+        "neg_up_a": {
+          "description": "Fitted a parameter for the neg_up branch (-Vfit -> 0) in the branch-wise sinh model I(V) = a * sinh(bV)."
+        },
+        "neg_up_b": {
+          "description": "Fitted b parameter for the neg_up branch (-Vfit -> 0) in the branch-wise sinh model I(V) = a * sinh(bV)."
+        },
+        "neg_up_r2_raw": {
+          "description": "Raw coefficient of determination for the neg_up branch (-Vfit -> 0) sinh fit. This value is stored without clamping or binarization.",
+          "unit": "dimensionless"
+        },
+        "neg_up_npts": {
+          "description": "Number of valid points used for fitting the neg_up branch (-Vfit -> 0).",
+          "unit": "count"
+        },
+        "neg_up_comp_hit": {
+          "description": "Branch-level indicator of whether the configured compliance current was reached within the fitting window for the neg_up branch (-Vfit -> 0). Stored as 0 or 1, and may be null when compliance is not configured for that polarity."
+        },
+        "status": {
+          "description": "Overall result-completeness label describing whether branch-wise IV nonlinearity fitting succeeded for all, some, or none of the four branches. Recommended values are OK, FIT_PARTIAL, FAIL, and SKIP."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability, for example to record fitting exceptions, point-availability issues, or branch-level failure reasons."
+        }
+      }
+    },
+    "Features_Electroforming": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one electroforming-classification method record, including the thresholds and policy settings used to convert four branch-wise IV nonlinearity fitting results into branch-level electroforming states, a derived four-position binary pattern, and a final experiment-level electroforming class.",
+      "relationship_and_qc_note": "Defines a reusable electroforming classification method that can be linked to many experiment-level electroforming result rows; the stable and unsure thresholds must remain logically ordered.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one electroforming classification method record."
+        },
+        "method_type": {
+          "description": "Identifier of the electroforming classification method used to derive branch-level and experiment-level electroforming labels."
+        },
+        "stable_r2_th": {
+          "description": "Fit-quality threshold above which a branch is classified as stable.",
+          "unit": "dimensionless"
+        },
+        "unsure_r2_th": {
+          "description": "Fit-quality threshold above which a branch is classified as unsure and below stable_r2_th. Branches below this threshold are classified as unstable.",
+          "unit": "dimensionless"
+        },
+        "comp_hit_to_stable": {
+          "description": "Policy flag indicating whether a branch that reaches the configured compliance current is directly classified as stable during electroforming classification, regardless of the fitted r2 value. This rule allows compliance-triggered forming behavior to be treated as stable evidence during branch-level electroforming mapping."
+        },
+        "r2_negative_to_zero": {
+          "description": "Policy flag indicating whether negative raw r2 values are set to zero before branch-level electroforming classification."
+        },
+        "r2_clamp_to_unit": {
+          "description": "Policy flag indicating whether adjusted r2 values are clamped to the interval [0,1] before branch-level electroforming classification."
+        },
+        "doi": {
+          "description": "Optional literature reference associated with the electroforming classification method."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this electroforming classification method record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the electroforming classification method."
+        }
+      }
+    },
+    "Features_Electroforming_sinh": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores experiment-level electroforming classification results derived from branch-wise sinh-based IV nonlinearity fitting results. Branch order is fixed as pos_up, pos_down, neg_down, and neg_up.",
+      "relationship_and_qc_note": "Each result row links one electroforming classification method record to one source IV nonlinearity sinh result, stores four ordered branch-level electroforming states, the derived binary pattern, and the final electroforming class.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one electroforming classification result record."
+        },
+        "ef_id": {
+          "description": "Foreign-key link to the electroforming classification method record used to generate this result."
+        },
+        "source_ivnl_sinh_id": {
+          "description": "Foreign-key link to the source Features_IV_nonlinearity_sinh record from which this electroforming classification result was derived."
+        },
+        "source_status": {
+          "description": "Optional copy of the source IV nonlinearity result status, stored for convenience during electroforming interpretation and auditing."
+        },
+        "pos_up_state3": {
+          "description": "Three-level electroforming state assigned to the pos_up branch, where 1.0 denotes stable, 0.5 denotes unsure, and 0.0 denotes unstable.",
+          "unit": "dimensionless"
+        },
+        "pos_down_state3": {
+          "description": "Three-level electroforming state assigned to the pos_down branch, where 1.0 denotes stable, 0.5 denotes unsure, and 0.0 denotes unstable.",
+          "unit": "dimensionless"
+        },
+        "neg_down_state3": {
+          "description": "Three-level electroforming state assigned to the neg_down branch, where 1.0 denotes stable, 0.5 denotes unsure, and 0.0 denotes unstable.",
+          "unit": "dimensionless"
+        },
+        "neg_up_state3": {
+          "description": "Three-level electroforming state assigned to the neg_up branch, where 1.0 denotes stable, 0.5 denotes unsure, and 0.0 denotes unstable.",
+          "unit": "dimensionless"
+        },
+        "pattern_bin4": {
+          "description": "Derived four-position binary branch pattern generated from the four ordered branch-level electroforming states in fixed order [pos_up, pos_down, neg_down, neg_up]. Only branches classified as stable are encoded as 1; branches classified as unsure or unstable are encoded as 0."
+        },
+        "ef_class": {
+          "description": "Final experiment-level electroforming class assigned from the ordered branch-state interpretation together with the derived binary pattern. Recommended values include NoEF, PoEF, NeEF, EF, UNCERTAIN, OTHER, and NO_DATA."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this electroforming classification result was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the electroforming classification result."
+        }
+      }
+    },
+    "Features_Electroforming_max_drop": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores a minimal electroforming-supporting feature linked to one electroforming classification result, including the resistance values before and after a selected electroforming event, the associated drop ratio, and a representative electroforming voltage.",
+      "relationship_and_qc_note": "Each row is linked one-to-one to an electroforming classification result. The stored event is selected by the current compliance-first-hit or max-drop rule rather than by a separate manual annotation step.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one electroforming supporting-feature record."
+        },
+        "ef_sinh_id": {
+          "description": "Foreign-key link to the parent Features_Electroforming_sinh result record to which this supporting feature belongs."
+        },
+        "r_before_ohm": {
+          "description": "Resistance value immediately before the selected electroforming event, in ohms.",
+          "unit": "ohm"
+        },
+        "r_after_ohm": {
+          "description": "Resistance value immediately after the selected electroforming event, in ohms.",
+          "unit": "ohm"
+        },
+        "drop_ratio": {
+          "description": "Resistance-drop ratio computed from r_before_ohm / r_after_ohm for the selected electroforming event. This value is stored only when the selected event corresponds to a meaningful resistance decrease.",
+          "unit": "dimensionless"
+        },
+        "electroform_voltage_V": {
+          "description": "Representative electroforming voltage, in volts, selected by the current electroforming-event rule. When a qualifying compliance-hit event is found, this field stores the first qualifying compliance-hit voltage. Otherwise, it stores the voltage associated with the selected max-drop event.",
+          "unit": "V"
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this electroforming supporting-feature record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the event-selection or fallback rule used for this record."
+        }
+      }
+    },
+    "Features_Ron_Roff": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one Ron/Roff extraction method record, including the fixed read voltage, branch-eligibility threshold, and literature reference used to derive Ron and Roff values from stored branch-wise sinh-based IV nonlinearity fitting results.",
+      "relationship_and_qc_note": "Defines a reusable Ron/Roff extraction method that can be linked to many derived result rows. Eligibility of each source branch is controlled by the fixed read voltage and minimum_r2 threshold.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one Ron/Roff extraction method record."
+        },
+        "method_type": {
+          "description": "Identifier of the Ron/Roff extraction method used for the derived-feature calculation."
+        },
+        "read_voltage_V": {
+          "description": "Fixed read voltage, in volts, at which the fitted sinh model is evaluated to derive Ron and Roff.",
+          "unit": "V"
+        },
+        "minimum_r2": {
+          "description": "Minimum acceptable branch-level raw r2 required for a fitted branch to be considered eligible for Ron/Roff derivation.",
+          "unit": "dimensionless"
+        },
+        "doi": {
+          "description": "Literature reference associated with the Ron/Roff derived-feature definition."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this Ron/Roff extraction method record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the Ron/Roff extraction method."
+        }
+      }
+    },
+    "Features_Ron_Roff_sinh": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores polarity-specific Ron/Roff results derived from one source Features_IV_nonlinearity_sinh record by evaluating the fitted sinh model at a fixed read voltage and comparing the paired branches within each polarity.",
+      "relationship_and_qc_note": "Each row links one Ron/Roff extraction method record to one source IV nonlinearity sinh result. Positive-polarity results are derived from pos_up versus pos_down, and negative-polarity results are derived from neg_down versus neg_up. Numerical Ron/Roff values are stored only when the corresponding polarity status is OK.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one derived Ron/Roff result record."
+        },
+        "ronroff_id": {
+          "description": "Foreign-key link to the Ron/Roff extraction method record used to generate this result."
+        },
+        "source_ivnl_sinh_id": {
+          "description": "Foreign-key link to the source Features_IV_nonlinearity_sinh record from which this Ron/Roff result was derived."
+        },
+        "pos_status": {
+          "description": "Positive-polarity result status describing whether a valid Ron/Roff pair could be derived from the pos_up and pos_down branches.",
+          "allowed_values_or_codes": "OK; PARTIAL; FAIL"
+        },
+        "neg_status": {
+          "description": "Negative-polarity result status describing whether a valid Ron/Roff pair could be derived from the neg_down and neg_up branches.",
+          "allowed_values_or_codes": "OK; PARTIAL; FAIL"
+        },
+        "pos_fail_reason": {
+          "description": "Optional human-readable reason explaining why the positive-polarity Ron/Roff result is partial or failed."
+        },
+        "neg_fail_reason": {
+          "description": "Optional human-readable reason explaining why the negative-polarity Ron/Roff result is partial or failed."
+        },
+        "pos_ron_ohm": {
+          "description": "Derived Ron value for the positive polarity, in ohms. This value is stored only when pos_status = OK.",
+          "unit": "ohm"
+        },
+        "pos_roff_ohm": {
+          "description": "Derived Roff value for the positive polarity, in ohms. This value is stored only when pos_status = OK.",
+          "unit": "ohm"
+        },
+        "neg_ron_ohm": {
+          "description": "Derived Ron value for the negative polarity, in ohms. This value is stored only when neg_status = OK.",
+          "unit": "ohm"
+        },
+        "neg_roff_ohm": {
+          "description": "Derived Roff value for the negative polarity, in ohms. This value is stored only when neg_status = OK.",
+          "unit": "ohm"
+        },
+        "pos_ron_branch": {
+          "description": "Name of the positive-polarity branch selected as Ron, either pos_up or pos_down. This field is stored only when pos_status = OK.",
+          "allowed_values_or_codes": "pos_up; pos_down"
+        },
+        "pos_roff_branch": {
+          "description": "Name of the positive-polarity branch selected as Roff, either pos_up or pos_down. This field is stored only when pos_status = OK.",
+          "allowed_values_or_codes": "pos_up; pos_down"
+        },
+        "neg_ron_branch": {
+          "description": "Name of the negative-polarity branch selected as Ron, either neg_down or neg_up. This field is stored only when neg_status = OK.",
+          "allowed_values_or_codes": "neg_down; neg_up"
+        },
+        "neg_roff_branch": {
+          "description": "Name of the negative-polarity branch selected as Roff, either neg_down or neg_up. This field is stored only when neg_status = OK.",
+          "allowed_values_or_codes": "neg_down; neg_up"
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this derived Ron/Roff result record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the Ron/Roff derivation result."
+        }
+      }
+    },
+    "Features_RS_switching": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one family-level record for the resistance-switching analysis workflow, including optional literature provenance for the methodology used to derive point-level switching or volatility-related resistance-change descriptors from pulse-based experiments.",
+      "relationship_and_qc_note": "Defines a reusable switching-analysis family that is linked to one or more runtime configurations in Features_RS_switching_rate_cal_config. In the current batch workflow, switching or volatility extraction may be applied only to experiments whose nearest previous CurveTracer experiment on the same device has an electroforming class in NeEF, PoEF, or EF.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one resistance-switching analysis family record."
+        },
+        "doi": {
+          "description": "Optional literature reference associated with the resistance-switching analysis family or methodology."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this resistance-switching analysis family record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the resistance-switching analysis family record."
+        }
+      }
+    },
+    "Features_RS_switching_rate_cal_config": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one runtime configuration record for resistance-switching-rate calculation, specifying which pulse-data block is analysed and what sliding-window size is used when deriving point-level switching descriptors from the ordered resistance series.",
+      "relationship_and_qc_note": "Each configuration belongs to one resistance-switching analysis family through rs_id. The combination of rs_id, block_kind, and window_n is unique, preventing duplicate runtime configurations for the same analysis family. In the current batch workflow, candidate experiments may be pre-filtered using the nearest previous CurveTracer experiment on the same device, requiring ef_class in NeEF, PoEF, or EF.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one resistance-switching rate-calculation configuration record."
+        },
+        "rs_id": {
+          "description": "Foreign-key link to the parent Features_RS_switching analysis family record used for this configuration."
+        },
+        "block_kind": {
+          "description": "Type of pulse-data block analysed by this configuration. In the current workflow, switching refers to programming-driven resistance-update segments, whereas volatility refers to post-programming repeated-read segments when available.",
+          "allowed_values_or_codes": "switching; volatility"
+        },
+        "window_n": {
+          "description": "Sliding-window size used in the resistance-switching-rate calculation. This parameter determines how many ordered resistance points are included in each local analysis window.",
+          "unit": "count"
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this switching-rate configuration record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the switching-rate configuration."
+        }
+      }
+    },
+    "Features_RS_switching_rate_cal_result": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores point-level switching-analysis results aligned to raw Experimental_Detail records. For each analysed pulse-data segment, the ordered resistance series is transformed into a local-window representation, analysed in the transformed space, and then mapped back to the original raw-point order.",
+      "relationship_and_qc_note": "Each row links one switching-rate configuration to one raw Experimental_Detail point through experimental_detail_id. The composite primary key (config_id, experimental_detail_id) ensures one point-level switching result per configuration and raw point. In the current batch workflow, these results are extracted only for experiments that pass the nearest-previous-CT inclusion rule.",
+      "columns": {
+        "config_id": {
+          "description": "Foreign-key link to the switching-rate configuration record used to generate this point-level result."
+        },
+        "experimental_detail_id": {
+          "description": "Foreign-key link to the raw Experimental_Detail record to which this point-level switching-rate result is aligned. This field provides direct provenance back to the original raw point."
+        },
+        "mean_y_ohm": {
+          "description": "Local representative resistance level, in ohms, assigned to this raw point after window-based switching analysis and back-mapping to the original point order. It describes the local resistance state around the point rather than the raw resistance value alone.",
+          "unit": "ohm"
+        },
+        "mu_DR_ohm": {
+          "description": "Local mean resistance change, in ohms, assigned to this raw point after window-based switching analysis and back-mapping to the original point order. It describes the local tendency and direction of resistance update around the point.",
+          "unit": "ohm"
+        },
+        "sigma_corr_ohm": {
+          "description": "Corrected local spread of resistance-change behaviour, in ohms, assigned to this raw point after window-based switching analysis and back-mapping to the original point order. Larger values indicate greater local dispersion in the resistance-change response within the analysis window.",
+          "unit": "ohm"
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this point-level switching-rate result record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the point-level switching-rate result."
+        }
+      }
+    },
+    "Features_Volatility": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one volatility-analysis method record. Each row identifies a methodology used to model post-programming resistance relaxation from volatility/read segments, together with the associated literature reference. This top-level table is method-generic and does not itself fix a particular fitted model implementation.",
+      "relationship_and_qc_note": "Defines a reusable volatility-analysis family that is linked to one or more specific runtime configurations in Features_Volatility_stexp_config. In the current workflow, volatility extraction is attempted only for ParameterFit_interRetention experiments that pass the nearest-previous-CT inclusion rule.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one volatility-analysis method record."
+        },
+        "method_type": {
+          "description": "Identifier of the volatility-analysis methodology.",
+          "allowed_values_or_codes": "Example: giotis2020_partII_stretched_exponential"
+        },
+        "doi": {
+          "description": "Literature reference associated with the volatility-analysis methodology."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this volatility-analysis method record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the volatility-analysis method record."
+        }
+      }
+    },
+    "Features_Volatility_stexp_config": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one runtime configuration record for stretched-exponential volatility fitting. Each row specifies the source data type, extracted block type, and fit-acceptance or rejection rules used during cycle-level volatility modeling.",
+      "relationship_and_qc_note": "Each configuration belongs to one volatility-analysis family through vol_id. The current implementation is specific to stretched-exponential fitting of volatility/read blocks from ParameterFit_interRetention experiments and records the acceptance rules used for result validity.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one stretched-exponential volatility-fitting configuration record."
+        },
+        "vol_id": {
+          "description": "Foreign-key link to the parent Features_Volatility method record used for this configuration."
+        },
+        "source_function_type": {
+          "description": "Source experiment-function type from which the volatility data were extracted. In the current workflow this is ParameterFit_interRetention.",
+          "allowed_values_or_codes": "ParameterFit_interRetention"
+        },
+        "block_kind": {
+          "description": "Type of extracted block used for fitting. In the current workflow this is volatility, meaning the repeated-read post-programming segment rather than the switching/programming segment.",
+          "allowed_values_or_codes": "volatility; switching"
+        },
+        "r2_min": {
+          "description": "Minimum fit-quality threshold required for accepting a fitted cycle. Cycles with fitted r2 below this threshold are rejected as insufficiently reliable for downstream use.",
+          "unit": "dimensionless"
+        },
+        "reject_tau_gt_T": {
+          "description": "Policy flag indicating whether a fitted cycle should be rejected when the fitted characteristic time tau_s is larger than the available observation window.",
+          "allowed_values_or_codes": "0 = do not enforce tau <= T rule; 1 = reject when tau_s > T_window_s * tau_T_margin"
+        },
+        "tau_T_margin": {
+          "description": "Positive margin factor used when comparing fitted tau_s against the observation-window duration. When reject_tau_gt_T = 1, rejection is based on whether tau_s > T_window_s * tau_T_margin.",
+          "unit": "dimensionless"
+        },
+        "min_N_for_accept": {
+          "description": "Optional minimum pulse-count requirement for accepting a fitted cycle. If used, cycles with fewer programming pulses than this threshold are rejected.",
+          "unit": "count"
+        },
+        "fit_engine": {
+          "description": "Identifier of the numerical fitting engine used for volatility fitting, for example scipy_curve_fit."
+        },
+        "fit_loss": {
+          "description": "Optional identifier of the fitting loss or robust-loss setting used during volatility fitting."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this stretched-exponential fitting configuration record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the volatility-fitting configuration."
+        }
+      }
+    },
+    "Features_Volatility_stexp_result": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores per-cycle stretched-exponential volatility-fitting results derived from the volatility/read block of ParameterFit_interRetention experiments. Each row records cycle-level protocol descriptors, time-axis information, key resistance states, fitted model parameters, fit quality, and fit-acceptance outcome.",
+      "relationship_and_qc_note": "The composite primary key (config_id, experiment_id, cycle_index) ensures one cycle-level result per configuration and cycle. In the current batch workflow, these results are generated only for ParameterFit_interRetention experiments that pass the nearest-previous-CT inclusion rule, used to confirm that the device has already electroformed.",
+      "columns": {
+        "config_id": {
+          "description": "Foreign-key link to the stretched-exponential volatility-fitting configuration used to generate this cycle-level result."
+        },
+        "experiment_id": {
+          "description": "Foreign-key link to the experiment from which this volatility cycle was extracted."
+        },
+        "cycle_index": {
+          "description": "One-based index of the volatility cycle within the experiment.",
+          "unit": "count"
+        },
+        "program_polarity": {
+          "description": "Programming polarity associated with this cycle.",
+          "allowed_values_or_codes": "pos; neg"
+        },
+        "sw_detail_id_start": {
+          "description": "Starting Experimental_Detail.id of the switching/programming block associated with this cycle. This range preserves traceability to the raw points that establish the pre-volatility state."
+        },
+        "sw_detail_id_end": {
+          "description": "Ending Experimental_Detail.id of the switching/programming block associated with this cycle."
+        },
+        "vol_detail_id_start": {
+          "description": "Starting Experimental_Detail.id of the volatility/read block used for stretched-exponential fitting."
+        },
+        "vol_detail_id_end": {
+          "description": "Ending Experimental_Detail.id of the volatility/read block used for stretched-exponential fitting."
+        },
+        "N_pulses": {
+          "description": "Number of programming pulses applied before the volatility/read segment in this cycle.",
+          "unit": "count"
+        },
+        "VP_program_V": {
+          "description": "Programming-voltage amplitude associated with this cycle, in volts.",
+          "unit": "V"
+        },
+        "dt_s": {
+          "description": "Sampling interval of the volatility/read trace, in seconds.",
+          "unit": "s"
+        },
+        "T_window_s": {
+          "description": "Total duration of the observed volatility/read window, in seconds. This quantity is also used in the tau > T rejection rule when enabled.",
+          "unit": "s"
+        },
+        "Rpre_ohm": {
+          "description": "Resistance immediately before the programming segment for this cycle, in ohms. This corresponds to the pre-stimulation resistance state.",
+          "unit": "ohm"
+        },
+        "Rstart_ohm": {
+          "description": "Resistance at the start of the volatility/read phase for this cycle, in ohms.",
+          "unit": "ohm"
+        },
+        "Rend_ohm": {
+          "description": "Resistance at the end of the observed volatility/read window for this cycle, in ohms.",
+          "unit": "ohm"
+        },
+        "alpha_ohm": {
+          "description": "Fitted amplitude parameter alpha of the stretched-exponential volatility model, in ohms.",
+          "unit": "ohm"
+        },
+        "tau_s": {
+          "description": "Fitted characteristic time constant tau of the stretched-exponential volatility model, in seconds.",
+          "unit": "s"
+        },
+        "beta": {
+          "description": "Fitted stretch exponent beta of the stretched-exponential volatility model.",
+          "unit": "dimensionless"
+        },
+        "gamma_ohm": {
+          "description": "Fitted offset parameter gamma of the stretched-exponential volatility model, in ohms.",
+          "unit": "ohm"
+        },
+        "r2": {
+          "description": "Fit-quality value for the stretched-exponential fit of this cycle.",
+          "unit": "dimensionless"
+        },
+        "fit_ok": {
+          "description": "Cycle-level fit-acceptance flag. A value of 1 indicates that the cycle fit passed the configured acceptance checks; a value of 0 indicates rejection or fit failure. This is a result-validity flag, not a physical device-state label.",
+          "allowed_values_or_codes": "0 = rejected or fit failed; 1 = accepted"
+        },
+        "reject_code": {
+          "description": "Cycle-level rejection code describing why a fitted cycle was not accepted. This is a result-validity code, not a physical classification.",
+          "allowed_values_or_codes": "0 = OK; 1 = FIT_FAIL; 2 = R2_LT_TH; 3 = TAU_GT_T; 4 = TOO_FEW_POINTS; 5 = OTHER"
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this cycle-level volatility-fitting result was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of fit status, rejection reason, or other cycle-level volatility-fitting details."
+        }
+      }
+    },
+    "Features_Switching_Volatility_Delta_config": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores one configuration for calculating segment-level resistance-change features. Each row defines how many valid resistance points are taken from the beginning and end of each segment, and how those points are summarised to represent the segment start state and end state. The same rule is then used to calculate a segment delta as end-state summary minus start-state summary. This configuration can be used either for switching-only segments or for paired switching-then-volatility segments.",
+      "relationship_and_qc_note": "Defines a deterministic extraction rule that can be reused across many experiments. The combination of source_function_type, block_pair, window_n, state_stat_type, and state_trim_q is unique, preventing duplicate configurations with the same calculation settings.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one switching/volatility delta configuration record."
+        },
+        "source_function_type": {
+          "description": "Source experiment-function type from which segment-level delta features are extracted. In the current workflow, this is typically ParameterFit for switching-only extraction or ParameterFit_interRetention for paired switching-then-volatility extraction.",
+          "allowed_values_or_codes": "Typical values: ParameterFit; ParameterFit_interRetention"
+        },
+        "block_pair": {
+          "description": "Segmentation pattern used for delta extraction. switching_only means that each result row describes only a switching/programming segment. switching_then_volatility means that each result row describes a paired cycle consisting of one switching segment followed by one volatility/read segment.",
+          "allowed_values_or_codes": "switching_only; switching_then_volatility"
+        },
+        "window_n": {
+          "description": "Number of valid resistance points taken from the start and the end of each segment when calculating the representative start state and end state.",
+          "unit": "count"
+        },
+        "state_stat_type": {
+          "description": "Statistic used to summarise the selected start and end points of a segment. Allowed values are mean, median, and trimmed_mean.",
+          "allowed_values_or_codes": "mean; median; trimmed_mean"
+        },
+        "state_trim_q": {
+          "description": "Trimming fraction used when state_stat_type = trimmed_mean. It specifies the fraction removed from each tail before computing the trimmed mean.",
+          "unit": "dimensionless"
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this switching/volatility delta configuration record was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of the delta-extraction configuration."
+        }
+      }
+    },
+    "Features_Switching_Volatility_Delta_result": {
+      "pipeline_stage": "Memristor Feature Extraction and Modeling",
+      "information_stored": "Stores segment-level start states, end states, and delta values derived from pulse-based resistance data. For each segment, the table records the representative resistance at the beginning of the segment, the representative resistance at the end of the segment, and the resulting delta value calculated as end minus start. For ParameterFit, only switching-segment values are stored. For ParameterFit_interRetention, both the switching segment and the following volatility segment can be stored for the same segment index.",
+      "relationship_and_qc_note": "The composite primary key (config_id, experiment_id, segment_idx) ensures one segment-level result per configuration and segment index. calc_ok and reject_code describe calculation validity rather than device physics. When block_pair = switching_only, volatility-related fields are expected to remain null.",
+      "columns": {
+        "config_id": {
+          "description": "Foreign-key link to the switching/volatility delta configuration used to generate this segment-level result."
+        },
+        "experiment_id": {
+          "description": "Foreign-key link to the experiment from which this segment-level delta result was derived."
+        },
+        "segment_idx": {
+          "description": "One-based segment index within the experiment.",
+          "unit": "count"
+        },
+        "sw_detail_id_start": {
+          "description": "Starting Experimental_Detail.id of the switching segment used for this result. This field anchors the switching state summaries and switching delta back to the raw detail sequence."
+        },
+        "vol_detail_id_start": {
+          "description": "Starting Experimental_Detail.id of the associated volatility segment, when present. This field is null for switching-only extraction."
+        },
+        "sw_start_stat_ohm": {
+          "description": "Representative resistance value of the beginning of the switching segment, in ohms. This value is calculated from the first window_n valid resistance points of the segment, using the summary method specified by state_stat_type (mean, median, or trimmed_mean)."
+        },
+        "sw_end_stat_ohm": {
+          "description": "Representative resistance value of the end of the switching segment, in ohms. This value is calculated from the last window_n valid resistance points of the segment, using the summary method specified by state_stat_type (mean, median, or trimmed_mean)."
+        },
+        "vol_start_stat_ohm": {
+          "description": "Representative resistance value of the beginning of the volatility segment, in ohms. This value is calculated from the first window_n valid resistance points of the volatility segment, using the summary method specified by state_stat_type. This field is null for switching-only extraction."
+        },
+        "vol_end_stat_ohm": {
+          "description": "Representative resistance value of the end of the volatility segment, in ohms. This value is calculated from the last window_n valid resistance points of the volatility segment, using the summary method specified by state_stat_type. This field is null for switching-only extraction."
+        },
+        "sw_delta_ohm": {
+          "description": "Resistance change of the switching segment, in ohms, calculated as sw_end_stat_ohm minus sw_start_stat_ohm."
+        },
+        "vol_delta_ohm": {
+          "description": "Resistance change of the volatility segment, in ohms, calculated as vol_end_stat_ohm minus vol_start_stat_ohm. This field is null for switching-only extraction."
+        },
+        "sw_segment_voltage_V": {
+          "description": "Representative programmed voltage associated with the switching segment, in volts. In the current implementation, this value is inferred from the segment index and the programmed voltage progression of the source experiment."
+        },
+        "calc_ok": {
+          "description": "Flag showing whether the start and end states and the corresponding delta values were successfully calculated for this segment.",
+          "allowed_values_or_codes": "0 = invalid or incomplete; 1 = calculated successfully"
+        },
+        "reject_code": {
+          "description": "Code explaining why a segment result could not be calculated or accepted. This is a calculation-validity code, not a physical classification.",
+          "allowed_values_or_codes": "0 = OK; 1 = TOO_FEW_POINTS; 2 = BAD_SEGMENT_RANGE; 3 = NON_FINITE_STATE; 4 = OTHER"
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this segment-level switching/volatility delta result was created in the database."
+        },
+        "note": {
+          "description": "Optional free-text note used for human-readable traceability of segment-level calculation status or exceptions."
+        }
+      }
+    },
+    "Recipe": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores one curated fabrication recipe record. Each row represents a named recipe or process-stack definition that can later be linked to one or more fabricated wafers.",
+      "relationship_and_qc_note": "Acts as the top-level fabrication context record. recipe_name is unique, preventing duplicate named recipe records.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one curated fabrication recipe record."
+        },
+        "recipe_name": {
+          "description": "Human-readable identifier of the fabrication recipe or process-stack definition."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this curated recipe record was created in the database."
+        },
+        "notes": {
+          "description": "Optional free-text note used for human-readable fabrication provenance."
+        }
+      }
+    },
+    "Layer": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores one physical layer record within a fabrication recipe. Each row represents one concrete layer in the device stack, including its stack role, position, and nominal thickness. The corresponding process definition for how that layer was made is stored in the matching tool-specific table.",
+      "relationship_and_qc_note": "Defines the stack element itself, while the tool-specific tables define how that layer was fabricated. The combination of recipe_id, layer_type, and position_in_layer is unique, preventing duplicate stack positions within a recipe.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one layer record."
+        },
+        "recipe_id": {
+          "description": "Foreign-key link to the parent recipe that this layer belongs to."
+        },
+        "layer_type": {
+          "description": "Functional role of the layer within the device stack.",
+          "allowed_values_or_codes": "Top; Insulator; Bottom"
+        },
+        "position_in_layer": {
+          "description": "Order index within rows of the same layer_type (Top, Insulator, or Bottom) for a given recipe, where 1 denotes the bottom-most position in the GUI ordering for that layer_type and larger values indicate higher positions.",
+          "unit": "count"
+        },
+        "tools": {
+          "description": "Tool-family label indicating which fabrication tool category was used to create this layer."
+        },
+        "thickness_nm": {
+          "description": "Nominal thickness of the layer, in nanometres.",
+          "unit": "nm"
+        }
+      }
+    },
+    "Wafer": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores one wafer-level fabrication instance linked to a curated recipe. Each row represents a physical wafer produced using a given recipe and records wafer-level identifiers such as wafer name, lot, and diameter.",
+      "relationship_and_qc_note": "Links recipe-level fabrication intent to a concrete wafer. The combination of recipe_id and wafer_name is unique, and recipe deletion is restricted while wafers still reference it.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one wafer record."
+        },
+        "recipe_id": {
+          "description": "Foreign-key link to the fabrication recipe used for this wafer."
+        },
+        "wafer_name": {
+          "description": "Human-readable identifier of the wafer within the scope of the linked recipe."
+        },
+        "lot": {
+          "description": "Lot or batch identifier associated with the wafer."
+        },
+        "diameter_mm": {
+          "description": "Wafer diameter, in millimetres.",
+          "unit": "mm"
+        }
+      }
+    },
+    "Tool_Attachment": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores one original native fabrication recipe file as a binary attachment. Each row preserves the original vendor-specific file together with minimal file metadata and a content hash, so that the raw recipe artifact is retained while structured recipe information remains separately queryable.",
+      "relationship_and_qc_note": "Preserves the original recipe artifact for provenance. The attachment hash and file size can be used to identify duplicate uploaded files.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one attached fabrication file record."
+        },
+        "file_name": {
+          "description": "Original file name of the attached fabrication recipe file."
+        },
+        "raw": {
+          "description": "Binary content of the attached native fabrication recipe file.",
+          "unit": "not applicable"
+        },
+        "file_size": {
+          "description": "File size of the attachment, in bytes.",
+          "unit": "bytes"
+        },
+        "content_hash": {
+          "description": "Hash value of the attached file content, used for duplicate detection and integrity checking."
+        },
+        "created_at": {
+          "description": "Timestamp indicating when this attachment record was created in the database."
+        }
+      }
+    },
+    "Tool_ALD": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores the ALD process definition for one layer. Each row records the high-level ALD process metadata used to fabricate a specific layer, while the detailed cycle/material/gas structure is stored separately in the ALD relation tables.",
+      "relationship_and_qc_note": "Each Tool_ALD row is attached to exactly one layer through a unique layer_id, so one layer can have at most one high-level ALD process-definition record.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one ALD process-definition record."
+        },
+        "layer_id": {
+          "description": "Foreign-key link to the layer fabricated by this ALD step."
+        },
+        "attachment_id": {
+          "description": "Optional foreign-key link to the original attached vendor recipe file for this ALD step."
+        },
+        "instrument_name": {
+          "description": "Name or identifier of the ALD tool used for this process step."
+        },
+        "desired_material": {
+          "description": "Intended deposited material associated with this ALD process step."
+        },
+        "precursor_name": {
+          "description": "Precursor used in this ALD process step."
+        },
+        "precursor_pod_temperature_degC": {
+          "description": "Precursor pod temperature, in degrees Celsius.",
+          "unit": "degC"
+        },
+        "dep_method": {
+          "description": "Deposition-method label or mode associated with this ALD step."
+        },
+        "reactant_name": {
+          "description": "Reactant used in this ALD process step."
+        },
+        "table_temperature_degC": {
+          "description": "Table or chuck temperature, in degrees Celsius.",
+          "unit": "degC"
+        }
+      }
+    },
+    "Tool_ALD_Material_Gas_Cycle_Relation": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores the hierarchical ALD recipe structure for one Tool_ALD record. Each row is one node in the ALD recipe tree and is typed as cycle, material, or gas. The hierarchy is represented using a parent pointer plus explicit sibling order, which is an adjacency-list style structure suitable for preserving nested ALD super-cycles without flattening the full recipe.",
+      "relationship_and_qc_note": "Encodes the ordered parent–child structure of the ALD recipe. parent_id links nodes within the same table, and order preserves sibling order under a shared parent.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one node in the ALD recipe tree."
+        },
+        "type": {
+          "description": "Node type within the ALD recipe tree.",
+          "allowed_values_or_codes": "cycle; material; gas"
+        },
+        "parent_id": {
+          "description": "Optional foreign-key link to the parent node of this ALD recipe-tree node."
+        },
+        "order": {
+          "description": "Sibling order of this node under its parent within the ALD recipe tree.",
+          "unit": "count"
+        },
+        "ALD_id": {
+          "description": "Foreign-key link to the parent Tool_ALD record that owns this ALD recipe tree."
+        }
+      }
+    },
+    "Tool_ALD_Cycle": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores cycle-specific attributes for one ALD recipe-tree node. Each row annotates an ALD relation-node with the cycle number associated with that node when the node represents a cycle element.",
+      "relationship_and_qc_note": "Each Tool_ALD_Cycle row links uniquely to one ALD recipe-tree node through MGCR_id, preventing multiple cycle-attribute rows for the same node.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one ALD cycle-attribute record."
+        },
+        "MGCR_id": {
+          "description": "Foreign-key link to the corresponding ALD recipe-tree node in Tool_ALD_Material_Gas_Cycle_Relation."
+        },
+        "cycle_number": {
+          "description": "Cycle number associated with this ALD cycle node.",
+          "unit": "count"
+        }
+      }
+    },
+    "Tool_ALD_Gas": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores gas-delivery attributes for one ALD recipe-tree node. Each row records the gas species and flow setting associated with a gas node in the ALD recipe structure.",
+      "relationship_and_qc_note": "Each Tool_ALD_Gas row links uniquely to one ALD recipe-tree node through MGCR_id, preventing multiple gas-attribute rows for the same node.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one ALD gas-attribute record."
+        },
+        "MGCR_id": {
+          "description": "Foreign-key link to the corresponding ALD recipe-tree node in Tool_ALD_Material_Gas_Cycle_Relation."
+        },
+        "gas_type": {
+          "description": "Gas species or gas-role label associated with this ALD gas node."
+        },
+        "flow_value": {
+          "description": "Recorded gas flow value for this ALD gas node."
+        },
+        "flow_unit": {
+          "description": "Unit of the recorded gas flow value.",
+          "allowed_values_or_codes": "sccm; slm"
+        }
+      }
+    },
+    "Tool_ALD_Material": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores material-specific attributes for one ALD recipe-tree node. Each row records the intended material, precursor, and deposition-rate metadata associated with a material node in the ALD recipe structure.",
+      "relationship_and_qc_note": "Each Tool_ALD_Material row links uniquely to one ALD recipe-tree node through MGCR_id, preventing multiple material-attribute rows for the same node.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one ALD material-attribute record."
+        },
+        "MGCR_id": {
+          "description": "Foreign-key link to the corresponding ALD recipe-tree node in Tool_ALD_Material_Gas_Cycle_Relation."
+        },
+        "desired_material": {
+          "description": "Intended deposited material associated with this ALD material node."
+        },
+        "precursor_name": {
+          "description": "Precursor associated with this ALD material node."
+        },
+        "dep_rate_value": {
+          "description": "Recorded deposition-rate value for this ALD material node."
+        },
+        "dep_rate_unit": {
+          "description": "Unit of the recorded deposition-rate value, for example nm/cycle."
+        },
+        "dep_time_s": {
+          "description": "Recorded deposition time associated with this ALD material node, in seconds.",
+          "unit": "s"
+        }
+      }
+    },
+    "Tool_E_beam": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores the e-beam deposition process definition for one layer. Each row records the main e-beam process settings used to fabricate a specific layer, including intended material, chamber pressure, power, and deposition rate.",
+      "relationship_and_qc_note": "Each Tool_E_beam row is attached to exactly one layer through a unique layer_id, so one layer can have at most one e-beam process-definition record.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one e-beam process-definition record."
+        },
+        "layer_id": {
+          "description": "Foreign-key link to the layer fabricated by this e-beam step."
+        },
+        "attachment_id": {
+          "description": "Optional foreign-key link to the original attached vendor recipe file for this e-beam step."
+        },
+        "instrument_name": {
+          "description": "Name or identifier of the e-beam deposition tool used for this process step."
+        },
+        "desired_material": {
+          "description": "Intended deposited material for this e-beam process step."
+        },
+        "chamber_pressure_mTorr": {
+          "description": "Chamber pressure, in millitorr.",
+          "unit": "mTorr"
+        },
+        "power_W": {
+          "description": "Applied power, in watts.",
+          "unit": "W"
+        },
+        "deposition_rate_nm_per_s": {
+          "description": "Deposition rate, in nanometres per second.",
+          "unit": "nm/s"
+        }
+      }
+    },
+    "Tool_Furnace": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores the furnace-treatment process definition for one layer. Each row records the main thermal-treatment settings associated with a furnace step, including ramp rate, annealing temperature, annealing duration, annealing gas, and idle temperature.",
+      "relationship_and_qc_note": "Each Tool_Furnace row is attached to exactly one layer through a unique layer_id, so one layer can have at most one furnace process-definition record.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one furnace process-definition record."
+        },
+        "layer_id": {
+          "description": "Foreign-key link to the layer associated with this furnace step."
+        },
+        "attachment_id": {
+          "description": "Optional foreign-key link to the original attached vendor recipe file for this furnace step."
+        },
+        "instrument_name": {
+          "description": "Name or identifier of the furnace tool used for this process step."
+        },
+        "ramping_rate_degC_per_s": {
+          "description": "Temperature ramping rate, in degrees Celsius per second.",
+          "unit": "degC/s"
+        },
+        "annealing_temperature_degC": {
+          "description": "Annealing temperature, in degrees Celsius.",
+          "unit": "degC"
+        },
+        "annealing_time_s": {
+          "description": "Annealing duration, in seconds.",
+          "unit": "s"
+        },
+        "annealing_gas": {
+          "description": "Gas atmosphere used during annealing."
+        },
+        "idle_temperature_degC": {
+          "description": "Idle or standby temperature, in degrees Celsius.",
+          "unit": "degC"
+        }
+      }
+    },
+    "Tool_Sputter": {
+      "pipeline_stage": "Memristor Fabrication",
+      "information_stored": "Stores the sputtering process definition for one layer. Each row records the main sputtering conditions used to fabricate a specific layer, including target material, process-gas settings, deposition voltage, gun mode, chamber pressure, and power density.",
+      "relationship_and_qc_note": "Each Tool_Sputter row is attached to exactly one layer through a unique layer_id, so one layer can have at most one sputtering process-definition record.",
+      "columns": {
+        "id": {
+          "description": "Surrogate primary key for one sputtering process-definition record."
+        },
+        "layer_id": {
+          "description": "Foreign-key link to the layer fabricated by this sputtering step."
+        },
+        "attachment_id": {
+          "description": "Optional foreign-key link to the original attached vendor recipe file for this sputtering step."
+        },
+        "instrument_name": {
+          "description": "Name or identifier of the sputtering tool used for this process step."
+        },
+        "desired_material": {
+          "description": "Intended deposited material associated with this sputtering step."
+        },
+        "target_material": {
+          "description": "Target material used in the sputtering source."
+        },
+        "gas_used": {
+          "description": "Main process gas or gas-mixture label used during sputtering."
+        },
+        "gas_flow_rate_sccm": {
+          "description": "Main process-gas flow rate, in standard cubic centimetres per minute.",
+          "unit": "sccm"
+        },
+        "plasma_strike_gas_used": {
+          "description": "Gas used for plasma striking, when separately recorded."
+        },
+        "plasma_strike_gas_flow_rate_sccm": {
+          "description": "Plasma-strike gas flow rate, in standard cubic centimetres per minute.",
+          "unit": "sccm"
+        },
+        "deposition_voltage_V": {
+          "description": "Deposition voltage, in volts.",
+          "unit": "V"
+        },
+        "gun_type": {
+          "description": "Gun mode or source type used for the sputtering step."
+        },
+        "voltage_frequency_kHz": {
+          "description": "Operating frequency, in kilohertz, when applicable.",
+          "unit": "kHz"
+        },
+        "chamber_pressure_mTorr": {
+          "description": "Chamber pressure, in millitorr.",
+          "unit": "mTorr"
+        },
+        "power_density_W_per_cm2": {
+          "description": "Power density, in watts per square centimetre.",
+          "unit": "W/cm2"
+        }
+      }
+    }
+  }
+}

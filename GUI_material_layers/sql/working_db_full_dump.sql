@@ -96,6 +96,7 @@ CREATE TABLE "Tool_ALD_Material" (
             precursor_name TEXT,
             dep_rate_value REAL,
             dep_rate_unit TEXT DEFAULT 'nm/cycle',
+            dep_time_s REAL,
             FOREIGN KEY (MGCR_id) REFERENCES Tool_ALD_Material_Gas_Cycle_Relation(id) ON DELETE CASCADE
         );
 

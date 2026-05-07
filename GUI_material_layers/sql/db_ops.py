@@ -166,6 +166,7 @@ CREATE TABLE IF NOT EXISTS Tool_ALD_Material (
     precursor_name TEXT,
     dep_rate_value REAL,
     dep_rate_unit TEXT DEFAULT 'nm/cycle',
+    dep_time_s REAL,
     FOREIGN KEY (MGCR_id) REFERENCES Tool_ALD_Material_Gas_Cycle_Relation(id) ON DELETE CASCADE
 )
 """
@@ -366,6 +367,7 @@ _SCHEMA_EXPECTED_COLUMNS: dict[str, tuple[tuple[str, str], ...]] = {
         ("precursor_name", "TEXT"),
         ("dep_rate_value", "REAL"),
         ("dep_rate_unit", "TEXT"),
+        ("dep_time_s", "REAL"),
     ),
     "Tool_ALD_Gas": (
         ("MGCR_id", "INTEGER"),
@@ -1649,8 +1651,8 @@ def nmlc_create_node(
             )
         else:
             cur.execute(
-                f"INSERT INTO {_ALD_MATERIAL_TABLE}({_NODE_REF_COL},desired_material,precursor_name,dep_rate_value,dep_rate_unit) VALUES (?,?,?,?,?)",
-                (mgcr_id, "", "", None, "nm/cycle"),
+                f"INSERT INTO {_ALD_MATERIAL_TABLE}({_NODE_REF_COL},desired_material,precursor_name,dep_rate_value,dep_rate_unit,dep_time_s) VALUES (?,?,?,?,?,?)",
+                (mgcr_id, "", "", None, "nm/cycle", None),
             )
         if owns_tx:
             conn.commit()
@@ -1795,17 +1797,18 @@ def nmlc_upsert_material(
     precursor_name: str,
     dep_rate_value: float | None,
     dep_rate_unit: str,
+    dep_time_s: float | None,
 ) -> None:
     _ = ald_id
     cur = conn.cursor()
     cur.execute(
-        f"UPDATE {_ALD_MATERIAL_TABLE} SET desired_material=?, precursor_name=?, dep_rate_value=?, dep_rate_unit=? WHERE {_NODE_REF_COL}=?",
-        (desired_material, precursor_name, dep_rate_value, dep_rate_unit, int(mgcr_id)),
+        f"UPDATE {_ALD_MATERIAL_TABLE} SET desired_material=?, precursor_name=?, dep_rate_value=?, dep_rate_unit=?, dep_time_s=? WHERE {_NODE_REF_COL}=?",
+        (desired_material, precursor_name, dep_rate_value, dep_rate_unit, dep_time_s, int(mgcr_id)),
     )
     if cur.rowcount == 0:
         cur.execute(
-            f"INSERT INTO {_ALD_MATERIAL_TABLE}({_NODE_REF_COL},desired_material,precursor_name,dep_rate_value,dep_rate_unit) VALUES (?,?,?,?,?)",
-            (int(mgcr_id), desired_material, precursor_name, dep_rate_value, dep_rate_unit),
+            f"INSERT INTO {_ALD_MATERIAL_TABLE}({_NODE_REF_COL},desired_material,precursor_name,dep_rate_value,dep_rate_unit,dep_time_s) VALUES (?,?,?,?,?,?)",
+            (int(mgcr_id), desired_material, precursor_name, dep_rate_value, dep_rate_unit, dep_time_s),
         )
     conn.commit()
 
@@ -1862,11 +1865,11 @@ def nmlc_load_tree(conn: sqlite3.Connection | None, ald_id: int | None) -> list[
         ).fetchall():
             cycle_map[int(mgcr_id)] = int(cycle_num or 1)
 
-    material_map: dict[int, tuple[str, str, float | None, str]] = {}
+    material_map: dict[int, tuple[str, str, float | None, str, float | None]] = {}
     if material_ids and table_exists(conn, _ALD_MATERIAL_TABLE):
         qmarks = ", ".join("?" for _ in material_ids)
-        for mgcr_id, dm, pc, val, unit in conn.execute(
-            f"SELECT {_NODE_REF_COL}, desired_material, precursor_name, dep_rate_value, dep_rate_unit FROM {_ALD_MATERIAL_TABLE} WHERE {_NODE_REF_COL} IN ({qmarks})",
+        for mgcr_id, dm, pc, val, unit, dep_time_s in conn.execute(
+            f"SELECT {_NODE_REF_COL}, desired_material, precursor_name, dep_rate_value, dep_rate_unit, dep_time_s FROM {_ALD_MATERIAL_TABLE} WHERE {_NODE_REF_COL} IN ({qmarks})",
             tuple(material_ids),
         ).fetchall():
             material_map[int(mgcr_id)] = (
@@ -1874,6 +1877,7 @@ def nmlc_load_tree(conn: sqlite3.Connection | None, ald_id: int | None) -> list[
                 "" if pc is None else str(pc),
                 None if val is None else float(val),
                 "nm/cycle" if unit is None else str(unit),
+                None if dep_time_s is None else float(dep_time_s),
             )
 
     gas_map: dict[int, tuple[str, float | None, str]] = {}
@@ -1915,7 +1919,7 @@ def nmlc_load_tree(conn: sqlite3.Connection | None, ald_id: int | None) -> list[
                 "flow_unit": flow_unit,
             }
         else:
-            dm, pc, val, unit = material_map.get(nid, ("", "", None, "nm/cycle"))
+            dm, pc, val, unit, dep_time_s = material_map.get(nid, ("", "", None, "nm/cycle", None))
             node = {
                 "type": "material",
                 "mgcr_id": nid,
@@ -1924,6 +1928,7 @@ def nmlc_load_tree(conn: sqlite3.Connection | None, ald_id: int | None) -> list[
                 "precursor_name": pc,
                 "dep_rate_value": val,
                 "dep_rate_unit": unit,
+                "dep_time_s": dep_time_s,
             }
         nodes[nid] = node
         if parent_id is None:
@@ -2064,7 +2069,7 @@ def copy_nmlc_for_ald(
 
         material_rows = source_conn.execute(
             f"""
-            SELECT {_NODE_REF_COL}, desired_material, precursor_name, dep_rate_value, dep_rate_unit
+            SELECT {_NODE_REF_COL}, desired_material, precursor_name, dep_rate_value, dep_rate_unit, dep_time_s
             FROM {_ALD_MATERIAL_TABLE}
             WHERE {_NODE_REF_COL} IN ({qmarks})
             """,
@@ -2080,13 +2085,14 @@ def copy_nmlc_for_ald(
             precursor = row[2]
             dep_rate_value = row[3]
             dep_rate_unit = row[4]
+            dep_time_s = row[5]
             target_conn.execute(
                 f"""
                 INSERT INTO {_ALD_MATERIAL_TABLE}
-                ({_NODE_REF_COL}, desired_material, precursor_name, dep_rate_value, dep_rate_unit)
-                VALUES (?, ?, ?, ?, ?)
+                ({_NODE_REF_COL}, desired_material, precursor_name, dep_rate_value, dep_rate_unit, dep_time_s)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (int(new_mgcr_id), desired, precursor, dep_rate_value, dep_rate_unit),
+                (int(new_mgcr_id), desired, precursor, dep_rate_value, dep_rate_unit, dep_time_s),
             )
 
         gas_rows = source_conn.execute(
