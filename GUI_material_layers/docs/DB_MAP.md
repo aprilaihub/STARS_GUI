@@ -33,7 +33,7 @@ Working-only helper tables:
 
 ## Big Database
 
-Startup target: normally `../Database_NEW_V2.db`
+Startup target: normally `Memristor_Database.db`
 
 Used for recipe-side persistence.
 
@@ -53,6 +53,6 @@ Main tables touched by this GUI:
 
 Context note:
 
-- this GUI uses the recipe/material subtree inside `Database_NEW_V2.db`
+- this GUI uses the recipe/material subtree inside `Memristor_Database.db`
 - experiment/device/wafer data may live in the same DB, but this package does not manage those flows
-- startup validation checks the selected big DB looks like the main experiment database before continuing
+- startup validation checks the selected big DB looks like the main experiment database before continuing, and the picker starts from the Windows Desktop

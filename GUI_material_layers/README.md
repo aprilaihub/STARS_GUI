@@ -5,7 +5,7 @@ Structured PyQt GUI for editing material/layer process flows.
 This package uses two database roles:
 
 - working DB: `db/Manufacture_Process_Database.db`
-- big database: `Database_NEW_V2.db`, chosen at startup or passed on the command line
+- big database: `Memristor_Database.db`, chosen at startup or passed on the command line
 
 ## Run
 
@@ -14,9 +14,10 @@ python GUI_material_layers/run.py
 ```
 
 Startup opens a picker for the big database. You can also pass that path directly:
+The picker starts from the Windows Desktop so you can browse to the database location manually.
 
 ```bash
-python GUI_material_layers/run.py ..\Database_NEW_V2.db
+python GUI_material_layers/run.py ..\Memristor_Database.db
 ```
 
 ## Package Layout

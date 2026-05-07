@@ -33,11 +33,11 @@ from ..logic.id_specs import in_spec, looks_like_id_spec, parse_exp_id_spec
 from ..logic.plotting import apply_mode, label_mode
 from ..sql.db_ops import (
     build_function_row_cache,
+    default_database_picker_dir,
     export_table_by_ids,
     fetch_experiment_points,
     fetch_layer_ids,
     fetch_single_row_by_link,
-    find_default_db,
     function_link_column,
     preload_metadata_cache,
     resolve_function_table,
@@ -365,10 +365,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _default_open_dir(self) -> str:
         if self.db_path and os.path.exists(self.db_path):
             return os.path.dirname(self.db_path)
-        fallback = find_default_db()
-        if fallback:
-            return os.path.dirname(fallback)
-        return os.getcwd()
+        return default_database_picker_dir()
 
     def _update_database_banner(self):
         self._set_window_title()

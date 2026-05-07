@@ -3,18 +3,18 @@
 This workspace currently centers on three package-style GUI folders:
 
 - `GUI_feature_switching/`
-  - Switching-fit inspection GUI for `Database_NEW_V2.db`
-  - entry: `python GUI_feature_switching/run.py [path/to/database.db]`
+  - Switching-fit inspection GUI for `Memristor_Database.db`
+  - entry: `python GUI_feature_switching/run.py [path/to/Memristor_Database.db]`
 - `GUI_material_layers/`
   - Material/layer process GUI with a fixed working DB plus a selected big database
-  - entry: `python GUI_material_layers/run.py [path/to/Database_NEW_V2.db]`
+  - entry: `python GUI_material_layers/run.py [path/to/Memristor_Database.db]`
 - `GUI_raw_data/`
   - Raw experiment browser and plotting GUI
-  - entry: `python GUI_raw_data/run.py [path/to/database.db]`
+  - entry: `python GUI_raw_data/run.py [path/to/Memristor_Database.db]`
 
 ## Shared Files
 
-- `Database_NEW_V2.db`
+- `Memristor_Database.db`
   - Main experiment database used by the raw-data and switching GUIs, and as the big database for material recipes
 - `schema.sql`
   - Schema reference snapshot
@@ -31,3 +31,8 @@ This workspace currently centers on three package-style GUI folders:
   - Structured raw-data GUI with focused docs for load flow and edit points
 
 Each of the three GUI folders keeps its own `README.md` and `docs/` notes for package-specific details.
+
+## Startup Note
+
+- `GUI_feature_switching` and `GUI_raw_data` open their database picker at the Windows Desktop if no path is passed
+- `GUI_material_layers` opens its big-database picker at the Windows Desktop if no path is passed

@@ -30,10 +30,10 @@
   - `db/Manufacture_Process_Database.db`
   - owned by this package for the editable working state
 - Big database:
-  - selected at startup, normally `../Database_NEW_V2.db`
+  - selected at startup, normally `Memristor_Database.db`
   - used for recipe-side save/load/replace operations
 
-The startup picker only targets the big database. The working DB stays fixed.
+The startup picker opens at the Windows Desktop and only targets the big database. The working DB stays fixed.
 
 ## Main Files
 

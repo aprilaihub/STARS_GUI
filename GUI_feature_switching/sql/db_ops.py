@@ -11,6 +11,7 @@ import numpy as np
 
 from GUI_raw_data.sql.db_ops import (
     build_function_row_cache,
+    default_database_picker_dir as _raw_default_database_picker_dir,
     fetch_single_row_by_link,
     find_default_db as _raw_find_default_db,
     function_link_column,
@@ -45,6 +46,10 @@ def _to_float(value: Any) -> float:
 
 def find_default_db() -> str:
     return _raw_find_default_db()
+
+
+def default_database_picker_dir() -> str:
+    return _raw_default_database_picker_dir()
 
 
 def validate_switching_database_path(
@@ -311,6 +316,7 @@ def load_experiment_series(
 __all__ = [
     "SeriesData",
     "build_function_row_cache",
+    "default_database_picker_dir",
     "fetch_rate_config_row",
     "fetch_single_row_by_link",
     "find_default_db",

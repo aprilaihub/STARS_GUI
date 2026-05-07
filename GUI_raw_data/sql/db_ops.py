@@ -16,6 +16,8 @@ from typing import Any, Callable, Optional
 
 import numpy as np
 
+DEFAULT_DATABASE_BASENAME = "Memristor_Database.db"
+
 _FUNCTION_TABLE_MAP = {
     "CurveTracer": "Function_CurveTracer",
     "ParameterFit": "Function_ParameterFit",
@@ -98,13 +100,33 @@ def safe_float(value):
         return np.nan
 
 
+def default_database_picker_dir() -> str:
+    """Return a sensible default folder for manual database selection."""
+    candidates = []
+    userprofile = os.environ.get("USERPROFILE", "").strip()
+    if userprofile:
+        candidates.append(os.path.join(userprofile, "Desktop"))
+    candidates.append(os.path.join(os.path.expanduser("~"), "Desktop"))
+    candidates.append(os.path.expanduser("~"))
+    candidates.append(os.getcwd())
+
+    for path in candidates:
+        path = os.path.abspath(path)
+        if os.path.isdir(path):
+            return path
+    return os.getcwd()
+
+
 def find_default_db() -> str:
-    """Try a few common project paths for Database_NEW_V2.db."""
+    """Try a few common project paths for the preferred database file name."""
     candidates = []
     here = os.path.abspath(os.path.dirname(__file__))
     package_root = os.path.abspath(os.path.join(here, ".."))
     project_root = os.path.abspath(os.path.join(here, "..", ".."))
 
+    for base_dir in (project_root, package_root, os.getcwd()):
+        candidates.append(os.path.join(base_dir, DEFAULT_DATABASE_BASENAME))
+    candidates.append(os.path.join(os.getcwd(), "A_ETL_STAGE_4_V2", DEFAULT_DATABASE_BASENAME))
     candidates.append(os.path.join(project_root, "Database_NEW_V2.db"))
     candidates.append(os.path.join(package_root, "Database_NEW_V2.db"))
     candidates.append(os.path.join(os.getcwd(), "A_ETL_STAGE_4_V2", "Database_NEW_V2.db"))

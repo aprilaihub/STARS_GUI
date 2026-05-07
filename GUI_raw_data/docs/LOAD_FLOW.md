@@ -6,7 +6,7 @@ This is the path that turns a selected SQLite file into usable GUI state.
 
 1. `run.py` passes an optional database path into `MainWindow`
 2. If a path is provided, `_open_initial_database(...)` opens it immediately
-3. If no path is provided, the GUI schedules `Open Database...` on startup
+3. If no path is provided, the GUI schedules `Open Database...` on startup and opens the picker at the Windows Desktop
 4. The selected file is opened read-only by `sql/db_ops.py`
 
 ## Validation And Reset

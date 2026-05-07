@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_BIG_DATABASE_NAME = "Database_NEW_V2.db"
+DEFAULT_BIG_DATABASE_NAME = "Memristor_Database.db"
 
 
 @dataclass(frozen=True, slots=True)

@@ -34,9 +34,9 @@ from ..logic.id_specs import in_spec, looks_like_id_spec, parse_exp_id_spec
 from ..sql.db_ops import (
     SeriesData,
     build_function_row_cache,
+    default_database_picker_dir,
     fetch_rate_config_row,
     fetch_single_row_by_link,
-    find_default_db,
     format_rate_config_label,
     function_link_column,
     list_rate_configs,
@@ -437,10 +437,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if db_path:
             self.load_database(db_path)
             return
-        default_db = find_default_db()
-        if default_db:
-            self.load_database(default_db)
-            return
         QtCore.QTimer.singleShot(0, self.open_database_dialog)
 
     def _create_filter_combo(self, empty_label: str) -> QtWidgets.QComboBox:
@@ -510,10 +506,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _default_open_dir(self) -> str:
         if self.db_path and os.path.exists(self.db_path):
             return os.path.dirname(self.db_path)
-        fallback = find_default_db()
-        if fallback:
-            return os.path.dirname(fallback)
-        return os.getcwd()
+        return default_database_picker_dir()
 
     def _update_database_banner(self) -> None:
         self._set_window_title()

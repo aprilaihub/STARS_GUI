@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -21,6 +22,22 @@ BIG_DB_FILE_FILTER = "SQLite Database Files (*.db *.sqlite *.sqlite3);;All Files
 BIG_DB_REQUIRED_TABLES = ("Experiment", "Device", "Wafer", "Recipe")
 
 
+def _default_database_picker_dir(default_path: Path) -> Path:
+    candidates = []
+    userprofile = os.environ.get("USERPROFILE", "").strip()
+    if userprofile:
+        candidates.append(Path(userprofile) / "Desktop")
+    candidates.append(Path.home() / "Desktop")
+    candidates.append(default_path.parent)
+    candidates.append(PROJECT_ROOT)
+    candidates.append(Path.home())
+
+    for candidate in candidates:
+        if candidate.exists() and candidate.is_dir():
+            return candidate
+    return PROJECT_ROOT
+
+
 def _validate_big_database(db_path: str | Path) -> Path:
     path = Path(db_path).expanduser().resolve()
     if not path.exists() or not path.is_file():
@@ -36,16 +53,14 @@ def _validate_big_database(db_path: str | Path) -> Path:
     missing = [table_name for table_name in BIG_DB_REQUIRED_TABLES if table_name not in table_names]
     if missing:
         raise RuntimeError(
-            "Selected file does not look like the main Database_NEW_V2.db. "
+            f"Selected file does not look like the main {DEFAULT_BIG_DATABASE_NAME}. "
             f"Missing tables: {', '.join(missing)}"
         )
     return path
 
 
 def _prompt_big_database(default_path: Path) -> Path | None:
-    start_path = default_path if default_path.exists() else default_path.parent
-    if not start_path.exists():
-        start_path = PROJECT_ROOT
+    start_path = _default_database_picker_dir(default_path)
 
     file_path, _ = QFileDialog.getOpenFileName(
         None,

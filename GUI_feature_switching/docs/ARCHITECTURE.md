@@ -20,7 +20,7 @@
 ## Load And Selection Flow
 
 1. `MainWindow` receives an optional database path from `run.py`
-2. If no path is passed, `sql/db_ops.find_default_db()` is used before falling back to `Open Database...`
+2. If no path is passed, the GUI opens `Open Database...` at the Windows Desktop for manual selection
 3. `load_database(...)` validates the switching schema and preloads switching-only metadata
 4. `reload_experiment_list()` filters the preloaded metadata in memory
 5. The preferred selection order is:

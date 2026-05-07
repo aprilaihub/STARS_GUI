@@ -45,6 +45,8 @@ PROJECT_ROOT = PACKAGE_DIR.parent
 
 def _default_db_path() -> Path:
     candidates = [
+        PROJECT_ROOT / "Memristor_Database.db",
+        PACKAGE_DIR / "Memristor_Database.db",
         PROJECT_ROOT / "Database_NEW_V2.db",
         PROJECT_ROOT / "Database_NEW.db",
         PACKAGE_DIR / "Database_NEW_V2.db",

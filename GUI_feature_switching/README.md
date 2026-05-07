@@ -1,6 +1,6 @@
 # GUI_feature_switching
 
-Structured PyQt GUI for switching-fit inspection and compact-model plotting on top of `Database_NEW_V2.db`.
+Structured PyQt GUI for switching-fit inspection and compact-model plotting on top of `Memristor_Database.db`.
 
 ## Run
 
@@ -19,12 +19,12 @@ python GUI_feature_switching/run.py
 Pass a database path if you want to open a specific file immediately:
 
 ```bash
-python GUI_feature_switching/run.py path/to/database.db
+python GUI_feature_switching/run.py path/to/Memristor_Database.db
 ```
 
 ## Current Behavior
 
-- If no path is passed, the GUI tries to find a default `Database_NEW_V2.db`; otherwise it falls back to `File -> Open Database...`
+- If no path is passed, the GUI opens `File -> Open Database...` at the Windows Desktop so users can browse to `Memristor_Database.db`
 - The experiment list only shows experiments that have `Features_RS_switching_rate_cal_result` rows
 - When visible, experiment `43003` is the preferred default selection
 - The metadata panel shows experiment, device/function, and switching-rate-config details

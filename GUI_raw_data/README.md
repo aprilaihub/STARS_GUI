@@ -1,6 +1,6 @@
 # GUI_raw_data
 
-Structured PyQt GUI for browsing STARS raw experiment data from a SQLite database.
+Structured PyQt GUI for browsing STARS raw experiment data from `Memristor_Database.db`.
 
 ## Run
 
@@ -17,11 +17,12 @@ python GUI_raw_data/run.py
 ```
 
 If you do not pass a database path, the GUI opens its database picker at startup.
+The picker starts from the Windows Desktop so you can browse to `Memristor_Database.db`.
 
 Open a specific database directly:
 
 ```bash
-python GUI_raw_data/run.py path/to/database.db
+python GUI_raw_data/run.py path/to/Memristor_Database.db
 ```
 
 Compatibility launcher:
@@ -48,7 +49,7 @@ python GUI_raw_data.py
 ## Main Behavior
 
 - Database access is read-only
-- The GUI opens a selected database path immediately, or shows a file picker if no path is provided
+- The GUI opens a selected database path immediately, or shows a file picker at the Windows Desktop if no path is provided
 - Metadata is preloaded once and then filtered in memory
 - Plot point data is fetched only for the current selection
 
