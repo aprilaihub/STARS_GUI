@@ -14,7 +14,7 @@ This workspace currently centers on three package-style GUI folders:
 
 ## Shared Files
 
-- `Database_NEW_V2.db`
+- `Memristor_Database.db`
   - Main experiment database used by the raw-data and switching GUIs, and as the big database for material recipes
 - `schema.sql`
   - Schema reference snapshot
