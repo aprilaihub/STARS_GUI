@@ -1,14 +1,34 @@
 # DB Map
 
-This GUI works with two different SQLite roles.
+## Database Roles
 
-## Working DB
+`GUI_material_layers` works with two SQLite roles.
 
-Path: `db/Manufacture_Process_Database.db`
+### Working Database
 
-Used for the editable in-GUI process state.
+On the current `main` branch, the running GUI uses an in-memory SQLite database as its working store.
 
-Main tables:
+This working store holds the current editor session:
+
+- layer rows
+- tool rows
+- ALD nested cycle/material/gas rows
+- tool attachments
+- helper selector values such as available materials, gases, or precursors
+
+This state is not persistent across GUI restarts.
+
+### Main Database
+
+The main database is the selected STARS database, usually `Memristor_Database.db`.
+
+This GUI uses that database for persistent recipe-side storage.
+
+Startup validation checks that the selected file looks like the main experiment database before recipe operations are enabled.
+
+## Working-Side Tables
+
+The working side uses these main tables:
 
 - `Layer`
 - `Tool_ALD`
@@ -21,7 +41,7 @@ Main tables:
 - `Tool_ALD_Gas`
 - `Tool_Attachment`
 
-Working-only helper tables:
+Helper tables on the working side:
 
 - `Available_Materials_ALD`
 - `Available_Precursors_ALD`
@@ -31,13 +51,9 @@ Working-only helper tables:
 - `Available_Materials_E_beam`
 - `Available_Materials_Furnace`
 
-## Big Database
+## Main-Database Tables Used By This GUI
 
-Startup target: normally `Memristor_Database.db`
-
-Used for recipe-side persistence.
-
-Main tables touched by this GUI:
+The persistent recipe side uses these main tables:
 
 - `Recipe`
 - `Layer`
@@ -51,8 +67,63 @@ Main tables touched by this GUI:
 - `Tool_ALD_Gas`
 - `Tool_Attachment`
 
-Context note:
+## Data Ownership
 
-- this GUI uses the recipe/material subtree inside `Memristor_Database.db`
-- experiment/device/wafer data may live in the same DB, but this package does not manage those flows
-- startup validation checks the selected big DB looks like the main experiment database before continuing, and the picker starts from the Windows Desktop
+### Owned By The Working Side
+
+- the current editor layout
+- unsaved thickness and tool parameter edits
+- autosaved session values
+- selector helper values learned during editing
+
+### Owned By The Main Database
+
+- saved recipes
+- recipe-side tool rows
+- recipe-side ALD nested trees
+- recipe-side attachments
+
+## Operation Map
+
+### Save Recipe
+
+Copies from:
+
+- working side -> main database
+
+Data copied:
+
+- step ordering and layer placement
+- tool parameters
+- ALD nested cycle/material/gas rows
+- attachments
+
+### Load Recipe
+
+Copies from:
+
+- main database -> working side
+
+Effect:
+
+- clears the current working session
+- rebuilds the editor state from the selected recipe
+
+### Replace Recipe
+
+Copies from:
+
+- working side -> existing recipe rows in the main database
+
+Effect:
+
+- keeps the recipe identity
+- overwrites its saved contents with the current editor state
+
+## Important Practical Rule
+
+Editing inside the GUI does not directly modify the main database just because autosave is happening.
+
+Autosave only updates the working session.
+
+The main database changes only when a recipe operation explicitly writes to it.

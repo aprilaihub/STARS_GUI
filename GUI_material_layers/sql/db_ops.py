@@ -761,6 +761,8 @@ class _ToolSqlMixin:
 class SQLiteWorkingProcessRepository(WorkingProcessRepository, _ToolSqlMixin):
     def __init__(self, db_path: Path):
         self.db_path = Path(db_path)
+        if str(self.db_path) != ":memory:":
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(self.db_path))
         self.conn.execute("PRAGMA foreign_keys = ON;")
 

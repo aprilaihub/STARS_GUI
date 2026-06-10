@@ -12,6 +12,13 @@ class AppConfig:
     working_db_path: Path
     recipe_db_path: Path
 
+    def with_working_db_path(self, working_db_path: str | Path) -> "AppConfig":
+        return AppConfig(
+            base_dir=self.base_dir,
+            working_db_path=Path(working_db_path),
+            recipe_db_path=self.recipe_db_path,
+        )
+
     def with_recipe_db_path(self, recipe_db_path: str | Path) -> "AppConfig":
         return AppConfig(
             base_dir=self.base_dir,

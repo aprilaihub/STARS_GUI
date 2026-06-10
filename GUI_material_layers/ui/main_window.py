@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List
 
 from PyQt5.QtCore import QEvent, QMimeData, QPointF, QRectF, QTimer, Qt, pyqtSignal
-from PyQt5.QtGui import QColor, QCursor, QDrag, QFont, QLinearGradient, QPainter, QPen, QPolygonF
+from PyQt5.QtGui import QColor, QCursor, QDrag, QFont, QKeySequence, QLinearGradient, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMainWindow,
     QMessageBox,
     QPushButton,
     QScrollArea,
@@ -1248,7 +1249,9 @@ class LoadRecipeDialog(QDialog):
             QMessageBox.critical(self, 'Error', f'Failed to replace recipe: {exc}')
 
 
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
+    databaseRequested = pyqtSignal()
+
     def __init__(
         self,
         process_service: ProcessService,
@@ -1269,6 +1272,7 @@ class MainWindow(QWidget):
         self._screen_adaptation_bound = False
         self._nmlc_dialog = None
         self._nmlc_active_step_id: int | None = None
+        self._recipe_db_path: str | None = None
 
         UIImprovement.apply_theme(self, dark=False)
         # Keep typography consistent across widgets in this window.
@@ -1277,8 +1281,21 @@ class MainWindow(QWidget):
         self.resize(1300, 760)
         self.setMinimumSize(1180, 760)
 
+        self._build_file_menu()
         self._initUI()
         self._refresh_from_db()
+
+    def _build_file_menu(self) -> None:
+        file_menu = self.menuBar().addMenu("&File")
+
+        open_action = file_menu.addAction("Open Main Database...")
+        open_action.setShortcut(QKeySequence.Open)
+        open_action.triggered.connect(self.databaseRequested.emit)
+
+        file_menu.addSeparator()
+
+        exit_action = file_menu.addAction("Exit")
+        exit_action.triggered.connect(self.close)
 
     def _initUI(self):
         left_top = QWidget()
@@ -1319,13 +1336,13 @@ class MainWindow(QWidget):
         lb = QVBoxLayout(left_bot)
         lb.setAlignment(Qt.AlignTop)
         lb.addWidget(QLabel('Recipe Details'))
-        btn_save = QPushButton('Save Recipe')
-        btn_load = QPushButton('Recipe Operation')
-        UIImprovement.set_button_variant(btn_load, 'warning')
-        btn_save.clicked.connect(self._open_save_dialog)
-        btn_load.clicked.connect(self._open_load_dialog)
-        lb.addWidget(btn_save)
-        lb.addWidget(btn_load)
+        self.btn_save = QPushButton('Save Recipe')
+        self.btn_load = QPushButton('Recipe Operation')
+        UIImprovement.set_button_variant(self.btn_load, 'warning')
+        self.btn_save.clicked.connect(self._open_save_dialog)
+        self.btn_load.clicked.connect(self._open_load_dialog)
+        lb.addWidget(self.btn_save)
+        lb.addWidget(self.btn_load)
         self.global_status = QLabel('Ready')
         UIImprovement.set_material_label_style(self.global_status)
         lb.addWidget(self.global_status)
@@ -1381,12 +1398,33 @@ class MainWindow(QWidget):
         splitter.setStretchFactor(2, 0)
         UIImprovement.set_vertical_splitter_style(splitter)
 
-        main = QHBoxLayout(self)
+        central = QWidget(self)
+        self.setCentralWidget(central)
+        main = QHBoxLayout(central)
         main.addWidget(splitter)
 
         for area in (self.top_drop_area, self.insulator_drop_area, self.bottom_drop_area):
             area.layout.removeWidget(area.title)
             area.title.setParent(None)
+
+        self._set_recipe_database_context(None)
+
+    def bind_recipe_service(self, recipe_service: RecipeService, recipe_db_path: str | Path) -> None:
+        self.recipe_service = recipe_service
+        self._set_recipe_database_context(str(recipe_db_path))
+
+    def _set_recipe_database_context(self, recipe_db_path: str | None) -> None:
+        self._recipe_db_path = str(recipe_db_path) if recipe_db_path else None
+        if self._recipe_db_path:
+            self.btn_save.setEnabled(True)
+            self.btn_load.setEnabled(True)
+            self.global_status.setText('Main database loaded')
+            self.setWindowTitle(f"Tool Selector with Database Integration - {Path(self._recipe_db_path).name}")
+        else:
+            self.btn_save.setEnabled(False)
+            self.btn_load.setEnabled(False)
+            self.global_status.setText('Open the main database to load or save recipes')
+            self.setWindowTitle('Tool Selector with Database Integration - No Database Loaded')
 
     def showEvent(self, event):
         super().showEvent(event)

@@ -1,57 +1,141 @@
 # GUI_material_layers
 
-Structured PyQt GUI for editing material/layer process flows.
+PyQt GUI for building and editing material-layer process flows, then saving those flows as recipes inside the main STARS database.
 
-This package uses two database roles:
+## What This GUI Does
 
-- working DB: `db/Manufacture_Process_Database.db`
-- big database: `Memristor_Database.db`, chosen at startup or passed on the command line
+This GUI is for process composition, not for browsing raw experiment records.
+
+Inside the editor you can:
+
+- build a layer stack with `Top`, `Insulator`, and `Bottom` sections
+- add tool steps for `ALD`, `Sputter`, `E_beam`, and `Furnace`
+- edit thickness and tool parameters
+- manage ALD nested cycle/material/gas trees
+- save the current process flow as a recipe in the main database
+- load an existing recipe back into the editor
+- replace an existing recipe with the current editor state
+- delete recipes from the main database
+
+## Runtime Model
+
+This GUI uses two different data scopes.
+
+### Main Database
+
+The main database is the selected STARS database, usually `Memristor_Database.db`.
+
+It is used for persistent recipe storage. The GUI validates that the selected file looks like the main experiment database before it enables recipe operations.
+
+### Working State
+
+The editable working state lives in an in-memory SQLite database for the lifetime of the GUI session.
+
+That means:
+
+- the current layer/tool edits are available while the GUI stays open
+- autosave inside the editor writes into memory, not directly into the main database
+- closing the GUI discards unsaved working data
+- recipe data only becomes persistent when you explicitly save or replace a recipe in the main database
+
+## Startup Behavior
+
+When the GUI starts:
+
+1. the main window opens first
+2. a database picker opens for the main database
+3. once a valid main database is selected, recipe operations become available
+
+You can reopen the picker from the menu bar:
+
+- `File > Open Main Database...`
+
+If no database is loaded:
+
+- the editor UI still opens
+- recipe save/load/replace actions stay disabled
 
 ## Run
+
+Start the GUI:
 
 ```bash
 python GUI_material_layers/run.py
 ```
 
-Startup opens a picker for the big database. You can also pass that path directly:
-The picker starts from the Windows Desktop so you can browse to the database location manually.
+You can also pass the main database path directly:
 
 ```bash
 python GUI_material_layers/run.py ..\Memristor_Database.db
 ```
 
+If no path is passed, the startup picker opens from a sensible default directory, usually the Windows Desktop.
+
+## Save And Load Semantics
+
+### Save Recipe
+
+`Save Recipe` reads the current in-memory working state and creates a new recipe in the main database.
+
+This includes:
+
+- layer ordering
+- tool parameters
+- ALD nested cycle/material/gas data
+- tool attachments
+
+### Recipe Operation
+
+`Recipe Operation` opens the recipe management dialog.
+
+From there you can:
+
+- load a recipe into the current working editor
+- replace an existing recipe with the current working editor state
+- delete a recipe from the main database
+
+Loading a recipe clears the current working state and rebuilds it from the selected saved recipe.
+
 ## Package Layout
 
+- `run.py`
+  - app entry point, startup picker, and main-database attachment
 - `bootstrap/`
-  - Path config and dependency wiring
+  - config object and dependency wiring
 - `ui/`
-  - Main page plus small dialogs
+  - main window, dialogs, drag/drop flow, and widget behavior
 - `logic/`
-  - Process and recipe services, enums, and models
+  - process services, recipe services, enums, and models
 - `sql/`
-  - Schema ensure logic and SQLite repositories
-- `db/`
-  - Working DB owned by this package
+  - SQLite repositories, schema ensure logic, and attachment/NMLC copy helpers
 - `tests/`
-  - Full-flow check
+  - GUI flow checks and runtime verification helpers
 
-## Main Behavior
+## Main Files
 
-- The working DB stays fixed inside this package
-- The big database is selected at startup and validated before the GUI opens
-- Recipes are saved to and loaded from the big database
-- Attachments are stored on both the working side and recipe side through `Tool_Attachment`
+- `ui/main_window.py`
+  - main editor, menu bar, tool panels, autosave, and recipe actions
+- `logic/process_service.py`
+  - working-state CRUD behavior for process steps
+- `logic/recipe_service.py`
+  - save/load/replace behavior between working state and the main database
+- `sql/db_ops.py`
+  - repository implementations and schema preparation
+- `bootstrap/container.py`
+  - repository/service container assembly
 
-## Docs
+## Related Docs
 
 - `docs/ARCHITECTURE.md`
-  - Startup path and module responsibilities
+  - runtime wiring and responsibility split
 - `docs/DB_MAP.md`
-  - Working DB vs big database tables
+  - current database roles and touched tables
 - `docs/PROJECT_MAP.md`
-  - Shortcut for where to edit common behaviors
+  - quick edit guide for common tasks
 
 ## Check
+
+Run the flow check:
 
 ```bash
 python GUI_material_layers/tests/full_flow_check.py
