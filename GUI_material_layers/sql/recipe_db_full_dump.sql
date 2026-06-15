@@ -8,11 +8,13 @@ CREATE TABLE Device (
                         REFERENCES Subdie(id)
                         ON DELETE CASCADE,
 
-    gate            INTEGER NOT NULL,                   -- Gate terminal index within the subdie
-    source          INTEGER NOT NULL,                   -- Source terminal index within the subdie
-    drain           INTEGER NOT NULL,                   -- Drain terminal index within the subdie
+    device_name       TEXT,                               -- e.g. "TFT_TopLeft_1"
+    channel_width_um  REAL NOT NULL DEFAULT 1.0,          -- W
+    channel_length_um REAL NOT NULL DEFAULT 1.0,          -- L
+    pos_x             REAL,                               -- Physical X coordinate on wafer
+    pos_y             REAL,                               -- Physical Y coordinate on wafer
 
-    UNIQUE(subdie_id, gate, source, drain)              -- Unique device address per subdie
+    UNIQUE(subdie_id, device_name)                        -- Unique device address per subdie
 );
 
 -- table: Die
@@ -52,11 +54,12 @@ CREATE TABLE Experimental_Detail (
                         REFERENCES Experiment(id)
                         ON DELETE CASCADE,
 
-    gate_voltage_V  REAL,                                -- Applied gate-source voltage (Vgs)
-    drain_voltage_V REAL,                                -- Applied drain-source voltage (Vds), formerly amplitude_V
-    current_A       REAL,                                -- Measured drain-source current (Ids)
-    resistance_ohm  REAL,                                -- Derived resistance: drain_voltage_V / current_A
-    pulse_width_s   REAL,
+    step_time_s     REAL,                                -- Measurement time / step time
+    v_gs_V          REAL,                                -- Gate-Source voltage
+    v_ds_V          REAL,                                -- Drain-Source voltage
+    i_ds_A          REAL,                                -- Drain current
+    i_gs_A          REAL,                                -- Gate leakage current
+    resistance_ohm  REAL,                                -- Derived resistance: v_ds_V / i_ds_A
     tag             TEXT NOT NULL,                       -- Instrument operation tag
     readtag         TEXT,
     read_voltage_V  REAL                                 -- Read voltage for resistance measurement
@@ -100,13 +103,15 @@ CREATE TABLE Features_TFT_Transfer (
                                         REFERENCES Features_TFT_Analysis_Config(id)
                                         ON DELETE RESTRICT,
 
-    threshold_voltage_V             REAL,
-    on_off_ratio                    REAL,
-    subthreshold_swing_mV_per_dec   REAL,
-    mobility_cm2_per_Vs             REAL,
-    on_current_A                    REAL,
-    off_current_A                   REAL,
-    status                          TEXT, -- e.g., 'OK', 'FAIL'
+    v_ds_eval_V                     REAL NOT NULL,    -- Evaluation condition (Vds)
+    v_th_V                          REAL,             -- Threshold Voltage
+    mobility_cm2_Vs                 REAL,             -- Field-effect mobility
+    ss_mV_dec                       REAL,             -- Subthreshold Swing
+    i_on_A                          REAL,             -- On current
+    i_off_A                         REAL,             -- Off current (Leakage)
+    on_off_ratio                    REAL,             -- I_on / I_off ratio
+    g_m_max_S                       REAL,             -- Maximum Transconductance
+    calc_status                     TEXT CHECK(calc_status IN ('OK', 'NOISY_DATA', 'NO_TURN_ON', 'FAIL')),
     note                            TEXT,
 
     UNIQUE(experiment_id, analysis_config_id)
