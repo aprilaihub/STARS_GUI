@@ -2,13 +2,17 @@
 
 
 class LayerType(str, Enum):
-    TOP = "Top"
-    INSULATOR = "Insulator"
-    BOTTOM = "Bottom"
+    SUBSTRATE = "Substrate"
+    SOURCE_DRAIN_ADHESION = "Source_Drain_Adhesion"
+    SOURCE_DRAIN_ELECTRODE = "Source_Drain_Electrode"
+    CHANNEL = "Channel"
+    GATE_DIELECTRIC = "Gate_Dielectric"
+    GATE_ADHESION = "Gate_Adhesion"
+    GATE_ELECTRODE = "Gate_Electrode"
 
     @classmethod
     def ordered(cls) -> list["LayerType"]:
-        return [cls.BOTTOM, cls.INSULATOR, cls.TOP]
+        return [cls.SUBSTRATE, cls.SOURCE_DRAIN_ADHESION, cls.SOURCE_DRAIN_ELECTRODE, cls.CHANNEL, cls.GATE_DIELECTRIC, cls.GATE_ADHESION, cls.GATE_ELECTRODE]
 
 
 class ToolType(str, Enum):

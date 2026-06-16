@@ -45,12 +45,12 @@ class ExperimentListModel(QtCore.QAbstractListModel):
             function_type = data.get("function_type") or ""
             recipe = data.get("recipe_name") or ""
             die = data.get("die_number", "")
-            area = data.get("cross_sectional_area_um2", "")
-            wordline = data.get("wordline", "")
-            bitline = data.get("bitline", "")
+            device_name = data.get("device_name", "")
+            w = data.get("channel_width_um", "")
+            l = data.get("channel_length_um", "")
             label = (
-                f"{eid} | dev={dev_id} | {function_type} | {name} | "
-                f"recipe={recipe} die={die} area={area} wl={wordline} bl={bitline}"
+                f"{eid} | dev={dev_id} | {device_name} (W/L:{w}/{l}) | "
+                f"{function_type} | {name} | recipe={recipe} die={die}"
             )
             self._label_cache[eid] = label
             return label
