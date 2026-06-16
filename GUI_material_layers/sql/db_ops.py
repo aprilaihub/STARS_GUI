@@ -19,14 +19,26 @@ _TOOL_TABLE_MAP: dict[ToolType, str] = {
 
 _LAYER_ORDER_SQL = """
 CASE layer_type
-    WHEN 'Top' THEN 0
-    WHEN 'Insulator' THEN 1
-    WHEN 'Bottom' THEN 2
+    WHEN 'Substrate' THEN 0
+    WHEN 'Source_Drain_Adhesion' THEN 1
+    WHEN 'Source_Drain_Electrode' THEN 2
+    WHEN 'Channel' THEN 3
+    WHEN 'Gate_Dielectric' THEN 4
+    WHEN 'Gate_Adhesion' THEN 5
+    WHEN 'Gate_Electrode' THEN 6
     ELSE 99
 END
 """
 
-_LAYER_ORDER_TOP_DOWN = {"Top": 0, "Insulator": 1, "Bottom": 2}
+_LAYER_ORDER_TOP_DOWN = {
+    "Substrate": 0,
+    "Source_Drain_Adhesion": 1,
+    "Source_Drain_Electrode": 2,
+    "Channel": 3,
+    "Gate_Dielectric": 4,
+    "Gate_Adhesion": 5,
+    "Gate_Electrode": 6,
+}
 _RECIPE_TABLE = "Recipe"
 _LEGACY_RECIPE_TABLE = "Recipe_Info"
 _LAYER_TABLE = "Layer"
@@ -98,7 +110,7 @@ CREATE TABLE IF NOT EXISTS Layer (
     position_in_layer INTEGER NOT NULL CHECK(position_in_layer >= 1),
     tools TEXT NOT NULL,
     thickness_nm REAL,
-    CHECK (layer_type IN ('Top', 'Insulator', 'Bottom')),
+    CHECK (layer_type IN ('Substrate', 'Source_Drain_Adhesion', 'Source_Drain_Electrode', 'Channel', 'Gate_Dielectric', 'Gate_Adhesion', 'Gate_Electrode')),
     UNIQUE (layer_type, position_in_layer)
 )
 """
@@ -120,7 +132,7 @@ CREATE TABLE IF NOT EXISTS Layer (
     position_in_layer INTEGER NOT NULL CHECK(position_in_layer >= 1),
     tools TEXT NOT NULL,
     thickness_nm REAL,
-    CHECK (layer_type IN ('Top', 'Insulator', 'Bottom')),
+    CHECK (layer_type IN ('Substrate', 'Source_Drain_Adhesion', 'Source_Drain_Electrode', 'Channel', 'Gate_Dielectric', 'Gate_Adhesion', 'Gate_Electrode')),
     UNIQUE (recipe_id, layer_type, position_in_layer),
     FOREIGN KEY (recipe_id) REFERENCES Recipe(id) ON DELETE CASCADE
 )

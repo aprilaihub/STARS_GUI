@@ -142,18 +142,14 @@ class LayerCakeWidget(QWidget):
 
     def paintEvent(self, _event):
         painter = QPainter(self)
-        # ACTION: Force Horizontal Text - Ensure all canvas coordinate rendering defaults to 0 deg/horizontal.
         painter.resetTransform()
-        
+
         def get_dynamic_label(layer_name: str) -> str:
+            mat = self.layer_materials.get(layer_name, "")
+            if mat and mat not in ("", "No material", "Select Material") and not mat.startswith("+"):
+                return mat
             role = layer_name.replace("_", " ")
-            mat = self.layer_materials.get(layer_name, "Select Material")
-            
-            # State 1 (No material): Draw just the layer's role.
-            if not mat or mat in ("No material", "Select Material") or mat.startswith("+"):
-                return role
-            # State 2 (Material selected): Draw the role and the material in parentheses.
-            return f"{role} ({mat})"
+            return role
 
         painter.setRenderHint(QPainter.Antialiasing, True)
 
@@ -166,7 +162,6 @@ class LayerCakeWidget(QWidget):
         W = X1 - X0
         H = box.height()
 
-        # Proportions for Multi-Layer Staggered Top-Gate TFT
         h_sub = H * 0.15
         h_sd_bot = H * 0.10
         h_sd_top = H * 0.10
@@ -184,7 +179,6 @@ class LayerCakeWidget(QWidget):
         D_left = X0 + W * 0.72
         Gap_center = (S_right + D_left) / 2.0
 
-        # Colors
         c_sub = QColor("#4A90E2")
         c_ti = QColor("#9E9E9E")
         c_pt = QColor("#424242")
@@ -195,51 +189,46 @@ class LayerCakeWidget(QWidget):
             painter.setPen(QPen(color.darker(130), 2))
             painter.setBrush(color)
             painter.drawRect(rect)
-            
+
             font = painter.font()
-            font.setPointSize(max(8, int(H * 0.035)))
+            font.setPointSize(max(7, int(H * 0.030)))
             font.setBold(True)
             painter.setFont(font)
-            
+
             painter.setPen(text_color)
-            painter.drawText(rect, int(Qt.AlignCenter), text)
+            painter.drawText(rect, int(Qt.AlignCenter | Qt.TextWordWrap), text)
 
         def draw_poly_with_text(poly, color, text, text_color, text_rect):
             painter.setPen(QPen(color.darker(130), 2))
             painter.setBrush(color)
             painter.drawPolygon(poly)
-            
+
             font = painter.font()
-            font.setPointSize(max(8, int(H * 0.035)))
+            font.setPointSize(max(7, int(H * 0.030)))
             font.setBold(True)
             painter.setFont(font)
-            
+
             painter.setPen(text_color)
-            painter.drawText(text_rect, int(Qt.AlignCenter), text)
+            painter.drawText(text_rect, int(Qt.AlignCenter | Qt.TextWordWrap), text)
 
-        # 1. Substrate
         sub_rect = QRectF(X0, Y_sub_top, W, h_sub)
-        draw_rect_with_text(sub_rect, c_sub, "Substrate", QColor("#FFFFFF"))
+        draw_rect_with_text(sub_rect, c_sub, get_dynamic_label("Substrate"), QColor("#FFFFFF"))
 
-        # 2. Source & Drain Contacts (Multi-layer)
         S_left = X0
         D_right = X1
         S_center_x = (S_left + S_right) / 2.0
         D_center_x = (D_left + D_right) / 2.0
 
-        # Source Bottom & Top
         s_bot_rect = QRectF(S_left, Y_sd_mid, S_right - S_left, h_sd_bot)
         draw_rect_with_text(s_bot_rect, c_ti, get_dynamic_label("Source_Drain_Adhesion"), QColor("#000000"))
         s_top_rect = QRectF(S_left, Y_sd_top_edge, S_right - S_left, h_sd_top)
         draw_rect_with_text(s_top_rect, c_pt, get_dynamic_label("Source_Drain_Electrode"), QColor("#FFFFFF"))
 
-        # Drain Bottom & Top
         d_bot_rect = QRectF(D_left, Y_sd_mid, D_right - D_left, h_sd_bot)
         draw_rect_with_text(d_bot_rect, c_ti, get_dynamic_label("Source_Drain_Adhesion"), QColor("#000000"))
         d_top_rect = QRectF(D_left, Y_sd_top_edge, D_right - D_left, h_sd_top)
         draw_rect_with_text(d_top_rect, c_pt, get_dynamic_label("Source_Drain_Electrode"), QColor("#FFFFFF"))
 
-        # 3. IGZO Semiconductor Channel
         igzo_y_top = Y_sd_top_edge - h_igzo_top
         igzo_poly = QPolygonF([
             QPointF(S_center_x, Y_sd_top_edge),
@@ -251,12 +240,9 @@ class LayerCakeWidget(QWidget):
             QPointF(S_right, Y_sub_top),
             QPointF(S_right, Y_sd_top_edge)
         ])
-        # ACTION: Fix Text Vertical Centering (Polygon Bounding Box Issue).
-        # By strictly modifying the text_rect box below the mathematical top corner, text pushes centrally into the visual bulk.
-        igzo_text_rect = QRectF(S_center_x, igzo_y_top + h_igzo_top * 0.35, D_center_x - S_center_x, h_igzo_top * 0.65)
+        igzo_text_rect = QRectF(S_center_x, igzo_y_top + h_igzo_top * 0.25, D_center_x - S_center_x, h_igzo_top * 0.75)
         draw_poly_with_text(igzo_poly, c_igzo, get_dynamic_label("Channel"), QColor("#FFFFFF"), igzo_text_rect)
 
-        # 4. Gate Dielectric
         diel_y_top = igzo_y_top - h_diel
         gap_width = D_left - S_right
         gate_w = gap_width
@@ -264,7 +250,7 @@ class LayerCakeWidget(QWidget):
         diel_top_left = Gap_center - (diel_top_w / 2.0)
         diel_top_right = Gap_center + (diel_top_w / 2.0)
         diel_slope_x = W * 0.05
-        
+
         diel_poly = QPolygonF([
             QPointF(S_center_x - diel_slope_x, Y_sd_top_edge),
             QPointF(S_center_x - W * 0.01, igzo_y_top - W * 0.01),
@@ -277,17 +263,14 @@ class LayerCakeWidget(QWidget):
             QPointF(S_center_x, igzo_y_top),
             QPointF(S_center_x, Y_sd_top_edge)
         ])
-        # ACTION: Fix Text Vertical Centering (Polygon Bounding Box Issue).
-        diel_text_rect = QRectF(diel_top_left, diel_y_top + h_diel * 0.35, diel_top_w, h_diel * 0.65)
+        diel_text_rect = QRectF(diel_top_left, diel_y_top + h_diel * 0.30, diel_top_w, h_diel * 0.70)
         draw_poly_with_text(diel_poly, c_diel, get_dynamic_label("Gate_Dielectric"), QColor("#FFFFFF"), diel_text_rect)
 
-        # 5. Multi-layer Top Gate
         Gate_left = Gap_center - (gap_width / 2.0)
-        
         gate_bot_y = diel_y_top - h_gate_bot
         gate_bot_rect = QRectF(Gate_left, gate_bot_y, gate_w, h_gate_bot)
         draw_rect_with_text(gate_bot_rect, c_ti, get_dynamic_label("Gate_Adhesion"), QColor("#000000"))
-        
+
         gate_top_y = gate_bot_y - h_gate_top
         gate_top_rect = QRectF(Gate_left, gate_top_y, gate_w, h_gate_top)
         draw_rect_with_text(gate_top_rect, c_pt, get_dynamic_label("Gate_Electrode"), QColor("#FFFFFF"))
@@ -855,22 +838,38 @@ class LayerSection(QWidget):
         self.main_window = main_window
         self.layer_name = layer_name
 
-        root = QHBoxLayout(self)
-        root.setContentsMargins(8, 8, 8, 8)
-        root.setSpacing(10)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(8, 6, 8, 6)
+        root.setSpacing(6)
 
-        # ACTION: Force Horizontal Text - removed \n.join() that forced vertical rendering on the side badges.
-        self.side = QLabel(layer_name.replace("_", " ").upper())
+        display_name = layer_name.replace("_", " ")
+        self.title = QLabel(display_name)
+        self.title.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.title.setStyleSheet("""
+            QLabel {
+                font-weight: 600;
+                font-size: 13px;
+                color: #374151;
+                padding: 3px 0px;
+            }
+        """)
+        root.addWidget(self.title)
+
         self.container = QFrame()
+        self.container.setStyleSheet("""
+            QFrame {
+                background: #F9FAFB;
+                border: 1px solid #E5E7EB;
+                border-radius: 6px;
+            }
+        """)
         cont_lay = QVBoxLayout(self.container)
-        cont_lay.setContentsMargins(12, 12, 12, 12)
-        cont_lay.setSpacing(8)
+        cont_lay.setContentsMargins(8, 8, 8, 8)
+        cont_lay.setSpacing(6)
 
         self.drop = DropArea(main_window, layer_name)
         cont_lay.addWidget(self.drop)
 
-        UIImprovement.style_layer_section(self.side, self.container, layer_name)
-        root.addWidget(self.side, 0)
         root.addWidget(self.container, 1)
 
 
@@ -883,17 +882,14 @@ class DropArea(QFrame):
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
-
-        self.title = QLabel(layer_name)
-        self.title.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.title)
+        self.layout.setSpacing(6)
 
         self.sublayer_wrap = QWidget()
         self.sublayer_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.sublayer_vlay = QVBoxLayout(self.sublayer_wrap)
         self.sublayer_vlay.setContentsMargins(0, 0, 0, 0)
-        self.sublayer_vlay.setSpacing(8)
-        self.sublayer_vlay.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.sublayer_vlay.setSpacing(6)
+        self.sublayer_vlay.setAlignment(Qt.AlignTop)
         self.layout.addWidget(self.sublayer_wrap, 1)
 
         self.sublayers: List[SubLayerWidget] = []
@@ -1415,7 +1411,10 @@ class MainWindow(QMainWindow):
         left_panel.setMinimumWidth(280)
         UIImprovement.add_shadow(left_panel)
 
-        dz_layout = QGridLayout()
+        dz_layout = QVBoxLayout()
+        dz_layout.setContentsMargins(0, 0, 0, 0)
+        dz_layout.setSpacing(10)
+
         self.gate_elec_section = LayerSection(self, 'Gate_Electrode')
         self.gate_adh_section = LayerSection(self, 'Gate_Adhesion')
         self.gate_diel_section = LayerSection(self, 'Gate_Dielectric')
@@ -1423,7 +1422,7 @@ class MainWindow(QMainWindow):
         self.sd_elec_section = LayerSection(self, 'Source_Drain_Electrode')
         self.sd_adh_section = LayerSection(self, 'Source_Drain_Adhesion')
         self.sub_section = LayerSection(self, 'Substrate')
-        
+
         self.gate_elec_drop_area = self.gate_elec_section.drop
         self.gate_adh_drop_area = self.gate_adh_section.drop
         self.gate_diel_drop_area = self.gate_diel_section.drop
@@ -1431,27 +1430,46 @@ class MainWindow(QMainWindow):
         self.sd_elec_drop_area = self.sd_elec_section.drop
         self.sd_adh_drop_area = self.sd_adh_section.drop
         self.sub_drop_area = self.sub_section.drop
-        
+
         self._all_drop_areas = (
             self.gate_elec_drop_area, self.gate_adh_drop_area, self.gate_diel_drop_area,
             self.channel_drop_area, self.sd_elec_drop_area, self.sd_adh_drop_area, self.sub_drop_area
         )
-        
-        dz_layout.addWidget(self.gate_elec_section, 0, 0)
-        dz_layout.addWidget(self.gate_adh_section, 0, 1)
-        dz_layout.addWidget(self.gate_diel_section, 0, 2)
-        dz_layout.addWidget(self.channel_section, 0, 3)
-        dz_layout.addWidget(self.sd_elec_section, 1, 0)
-        dz_layout.addWidget(self.sd_adh_section, 1, 1)
-        dz_layout.addWidget(self.sub_section, 1, 2)
 
-        scroll = QScrollArea()
+        dz_layout.addWidget(self.gate_elec_section)
+        dz_layout.addWidget(self.gate_adh_section)
+        dz_layout.addWidget(self.gate_diel_section)
+        dz_layout.addWidget(self.channel_section)
+        dz_layout.addWidget(self.sd_elec_section)
+        dz_layout.addWidget(self.sd_adh_section)
+        dz_layout.addWidget(self.sub_section)
+        dz_layout.addStretch()
+
         container = QWidget()
         container.setLayout(dz_layout)
+
+        scroll = QScrollArea()
         scroll.setWidget(container)
         scroll.setWidgetResizable(True)
-        scroll.setMinimumWidth(420)
-        UIImprovement.set_scroll_area_style(scroll)
+        scroll.setMinimumWidth(480)
+        scroll.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background: transparent;
+            }
+            QScrollBar:vertical {
+                background: rgba(0, 112, 186, 0.20);
+                width: 10px;
+                margin: 2px 0;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:vertical {
+                background: rgba(0, 88, 155, 0.80);
+                border-radius: 5px;
+                min-height: 20px;
+            }
+        """)
+        scroll.viewport().setStyleSheet("background: transparent;")
         UIImprovement.add_shadow(scroll)
 
         self.info_widget = QWidget()
@@ -1476,8 +1494,8 @@ class MainWindow(QMainWindow):
         main.addWidget(splitter)
 
         for area in self._all_drop_areas:
-            area.layout.removeWidget(area.title)
-            area.title.setParent(None)
+            area.layout.removeWidget(area.title) if hasattr(area, 'title') else None
+            area.title.setParent(None) if hasattr(area, 'title') else None
 
         self._set_recipe_database_context(None)
 
@@ -1838,68 +1856,62 @@ class MainWindow(QMainWindow):
         info_main_lay.setSpacing(8)
         self.info_layout.addWidget(self.info_group)
 
-        # --- Compact Top Row ---
-        top_row = QHBoxLayout()
-        info_main_lay.addLayout(top_row)
-        
+        # --- Header with Thickness and Material in compact row ---
+        header_row = QHBoxLayout()
+        info_main_lay.addLayout(header_row)
+
         display_layer = tool_button.layer_name.replace("_", " ")
         hdr = QLabel(f'{display_layer}: {tool_button.tool_name}')
-        hdr.setStyleSheet('font-weight: bold; font-size: 16px;')
-        top_row.addWidget(hdr)
-        self._status_label = None
+        hdr.setStyleSheet('font-weight: 600; font-size: 14px;')
+        header_row.addWidget(hdr, 1)
 
-        top_row.addSpacing(12)
-        top_row.addWidget(QLabel('Thickness (nm):'))
+        header_row.addSpacing(12)
+        header_row.addWidget(QLabel('Thickness (nm):'))
         self.thickness_input = QLineEdit('' if step.thickness_nm is None else str(step.thickness_nm))
-        self.thickness_input.setMaximumWidth(80)
-        top_row.addWidget(self.thickness_input)
+        self.thickness_input.setMaximumWidth(100)
+        header_row.addWidget(self.thickness_input)
 
-        # --- Secondary Parameters Grid ---
-        param_grid = QGridLayout()
-        param_grid.setSpacing(8)
-        info_main_lay.addLayout(param_grid)
+        # --- Vertical Parameters Layout ---
+        param_vlay = QVBoxLayout()
+        param_vlay.setSpacing(10)
+        info_main_lay.addLayout(param_vlay)
 
         self.parameter_widgets = {}
         is_ald = step.tool_type == ToolType.ALD
         ald_nmlc_button_added = False
-        
-        grid_row = 0
-        grid_col = 0
-        
+
         for spec in specs_for(step.tool_type):
             if is_ald and spec.key in {"desired_material", "precursor_name"}:
                 if not ald_nmlc_button_added:
+                    mat_row = QHBoxLayout()
                     btn_nmlc = QPushButton('Inserting material')
                     UIImprovement.set_button_variant(btn_nmlc, 'primary')
                     btn_nmlc.clicked.connect(self._open_nmlc_for_ald)
-                    top_row.addSpacing(12)
-                    top_row.addWidget(QLabel('Material:'))
-                    top_row.addWidget(btn_nmlc)
+                    mat_row.addWidget(QLabel('Material:'), 0)
+                    mat_row.addWidget(btn_nmlc, 1)
+                    param_vlay.addLayout(mat_row)
                     self.parameter_widgets["__ald_nmlc_material__"] = btn_nmlc
                     ald_nmlc_button_added = True
                 continue
-                
+
             w = self._make_param_widget(spec, step)
             label = spec.label if spec.unit == '-' else f"{spec.label} ({spec.unit})"
 
-            # Place desired_material explicitly in the top row alongside Thickness
             if spec.key == "desired_material":
-                top_row.addSpacing(12)
-                top_row.addWidget(QLabel('Material:'))
-                top_row.addWidget(w)
+                mat_row = QHBoxLayout()
+                mat_row.addWidget(QLabel('Material:'), 0)
+                mat_row.addWidget(w, 1)
+                param_vlay.addLayout(mat_row)
                 self.parameter_widgets[spec.key] = w
                 continue
-                
-            param_grid.addWidget(QLabel(label + ':'), grid_row, grid_col)
-            param_grid.addWidget(w, grid_row, grid_col + 1)
-            self.parameter_widgets[spec.key] = w
-            
-            grid_col += 2
-            if grid_col >= 6:
-                grid_col = 0
-                grid_row += 1
 
-        top_row.addStretch(1)
+            param_row = QHBoxLayout()
+            param_row.addWidget(QLabel(label + ':'), 0)
+            param_row.addWidget(w, 1)
+            param_vlay.addLayout(param_row)
+            self.parameter_widgets[spec.key] = w
+
+        param_vlay.addStretch(1)
 
         action_row = QHBoxLayout()
 
