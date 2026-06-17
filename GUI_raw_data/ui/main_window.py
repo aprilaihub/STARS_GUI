@@ -60,9 +60,6 @@ class FilterState:
     restrict_device_id: bool
     recipe: Any
     die_number: Any
-    subdie_area: Any
-    wordline: Any
-    bitline: Any
     function_type: Any
 
 
@@ -130,9 +127,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._uni_recipe = set()
         self._uni_die = set()
-        self._uni_area = set()
-        self._uni_wl = set()
-        self._uni_bl = set()
         self._uni_fun = set()
 
         self._suppress_selection = False
@@ -154,7 +148,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def _build_filter_controls(self) -> None:
         self.recipe_combo = self._create_filter_combo("Recipe: All")
         self.die_combo = self._create_filter_combo("Die Number: All")
-        self.subdie_combo = self._create_filter_combo("Subdie Area (um^2): All")
         self.function_combo = self._create_filter_combo("Function Type: All")
 
         self.filter_name_edit = QtWidgets.QLineEdit()
@@ -190,7 +183,6 @@ class MainWindow(QtWidgets.QMainWindow):
         for widget in (
             self.recipe_combo,
             self.die_combo,
-            self.subdie_combo,
             self.function_combo,
             self.filter_name_edit,
         ):
@@ -317,7 +309,6 @@ class MainWindow(QtWidgets.QMainWindow):
         return (
             self.recipe_combo,
             self.die_combo,
-            self.subdie_combo,
             self.function_combo,
         )
 
@@ -393,9 +384,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.function_row_cache.clear()
         self._uni_recipe.clear()
         self._uni_die.clear()
-        self._uni_area.clear()
-        self._uni_wl.clear()
-        self._uni_bl.clear()
         self._uni_fun.clear()
         self._last_selected_eids = []
         self._points_cache.clear()
@@ -544,9 +532,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.meta_by_eid.update(result["meta_by_eid"])
             self._uni_recipe = result["unique_values"]["recipe"]
             self._uni_die = result["unique_values"]["die"]
-            self._uni_area = result["unique_values"]["area"]
-            self._uni_wl = result["unique_values"]["wordline"]
-            self._uni_bl = result["unique_values"]["bitline"]
             self._uni_fun = result["unique_values"]["function"]
 
             self._prime_function_row_cache()
@@ -590,7 +575,6 @@ class MainWindow(QtWidgets.QMainWindow):
             restrict_device_id=self.filter_device_restrict_cb.isChecked(),
             recipe=self.recipe_combo.currentData(),
             die_number=self.die_combo.currentData(),
-            subdie_area=self.subdie_combo.currentData(),
             function_type=self.function_combo.currentData(),
         )
 
@@ -630,8 +614,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if filters.recipe and str(data.get("recipe_name", "")) != str(filters.recipe):
             return False
         if filters.die_number not in (None, "") and data.get("die_number") != int(filters.die_number):
-            return False
-        if filters.subdie_area not in (None, "") and data.get("cross_sectional_area_um2") != int(filters.subdie_area):
             return False
         if filters.function_type and str(data.get("function_type", "")) != str(filters.function_type):
             return False
