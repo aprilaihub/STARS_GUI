@@ -60,9 +60,6 @@ class FilterState:
     restrict_device_id: bool
     recipe: Any
     die_number: Any
-    subdie_area: Any
-    wordline: Any
-    bitline: Any
     function_type: Any
 
 
@@ -87,12 +84,13 @@ class MainWindow(QtWidgets.QMainWindow):
         ("recipe_name", "recipe_name"),
         ("die_number", "die_number"),
         ("die_type", "die_type"),
-        ("cross_sectional_area_um2", "cross_sectional_area_um2"),
-        ("wordline", "wordline"),
-        ("bitline", "bitline"),
         ("wafer_name", "wafer_name"),
         ("lot", "lot"),
         ("diameter_mm", "diameter_mm"),
+        ("subdie_id", "subdie_id"),
+        ("device_name", "device_name"),
+        ("channel_width_um", "W (um)"),
+        ("channel_length_um", "L (um)"),
     )
 
     def __init__(self, db_path: Optional[str] = None):
@@ -129,9 +127,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._uni_recipe = set()
         self._uni_die = set()
-        self._uni_area = set()
-        self._uni_wl = set()
-        self._uni_bl = set()
         self._uni_fun = set()
 
         self._suppress_selection = False
@@ -153,9 +148,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def _build_filter_controls(self) -> None:
         self.recipe_combo = self._create_filter_combo("Recipe: All")
         self.die_combo = self._create_filter_combo("Die Number: All")
-        self.subdie_combo = self._create_filter_combo("Subdie Area (um^2): All")
-        self.wordline_combo = self._create_filter_combo("Wordline: All")
-        self.bitline_combo = self._create_filter_combo("Bitline: All")
         self.function_combo = self._create_filter_combo("Function Type: All")
 
         self.filter_name_edit = QtWidgets.QLineEdit()
@@ -191,9 +183,6 @@ class MainWindow(QtWidgets.QMainWindow):
         for widget in (
             self.recipe_combo,
             self.die_combo,
-            self.subdie_combo,
-            self.wordline_combo,
-            self.bitline_combo,
             self.function_combo,
             self.filter_name_edit,
         ):
@@ -209,24 +198,22 @@ class MainWindow(QtWidgets.QMainWindow):
         return panel
 
     def _build_plot_panel_column(self) -> QtWidgets.QWidget:
-        self.plot_v = MplPanel(
-            "Plot 1: Voltage vs. Index (amplitude_V or read_voltage_V)",
-            PLOT1_X_DEFAULT,
-            PLOT1_Y_DEFAULT,
+        self.plot_transfer = MplPanel(
+            "Transfer Characteristics (Id-Vgs)",
+            default_x="linear",
+            default_y="log10",
         )
-        self.plot_logr = MplPanel("Plot 2: Resistance vs. Index", PLOT2_X_DEFAULT, PLOT2_Y_DEFAULT)
-        self.plot_iv = MplPanel(
-            "Plot 3: I-V (derived from I = V / R; current is not stored in the schema)",
-            PLOT3_X_DEFAULT,
-            PLOT3_Y_DEFAULT,
+        self.plot_output = MplPanel(
+            "Output Characteristics (Id-Vds)",
+            default_x="linear",
+            default_y="linear",
         )
 
         panel = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(panel)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.plot_v, stretch=1)
-        layout.addWidget(self.plot_logr, stretch=1)
-        layout.addWidget(self.plot_iv, stretch=1)
+        layout.addWidget(self.plot_transfer, stretch=1)
+        layout.addWidget(self.plot_output, stretch=1)
         return panel
 
     def _build_metadata_panel(self) -> QtWidgets.QWidget:
@@ -286,7 +273,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.list_view.selectionModel().selectionChanged.connect(self.on_selection_changed_view)
 
-        for panel in (self.plot_v, self.plot_logr, self.plot_iv):
+        for panel in (self.plot_transfer, self.plot_output):
             panel.combo_x.currentIndexChanged.connect(self.replot_from_cache)
             panel.combo_y.currentIndexChanged.connect(self.replot_from_cache)
 
@@ -322,9 +309,6 @@ class MainWindow(QtWidgets.QMainWindow):
         return (
             self.recipe_combo,
             self.die_combo,
-            self.subdie_combo,
-            self.wordline_combo,
-            self.bitline_combo,
             self.function_combo,
         )
 
@@ -332,9 +316,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return (
             (self.recipe_combo, "Recipe: All", self._uni_recipe, str),
             (self.die_combo, "Die Number: All", self._uni_die, int),
-            (self.subdie_combo, "Subdie Area (um^2): All", self._uni_area, int),
-            (self.wordline_combo, "Wordline: All", self._uni_wl, int),
-            (self.bitline_combo, "Bitline: All", self._uni_bl, int),
+            # Subdie Area, W/L etc. could be added here if needed for filtering
             (self.function_combo, "Function Type: All", self._uni_fun, str),
         )
 
@@ -375,15 +357,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.db_path_label.setText("Database: Not loaded")
 
     def _show_idle_state(self, message: str):
-        self.plot_v.clear_with_msg(message)
-        self.plot_logr.clear_with_msg(message)
-        self.plot_iv.clear_with_msg(message)
+        self.plot_transfer.clear_with_msg(message)
+        self.plot_output.clear_with_msg(message)
         self.meta_table.setRowCount(0)
 
     def _show_plot_message(self, message: str) -> None:
-        self.plot_v.clear_with_msg(message)
-        self.plot_logr.clear_with_msg(message)
-        self.plot_iv.clear_with_msg(message)
+        self.plot_transfer.clear_with_msg(message)
+        self.plot_output.clear_with_msg(message)
 
     def _set_filter_combo_signals_blocked(self, blocked: bool) -> None:
         for combo in self._filter_combos():
@@ -404,9 +384,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.function_row_cache.clear()
         self._uni_recipe.clear()
         self._uni_die.clear()
-        self._uni_area.clear()
-        self._uni_wl.clear()
-        self._uni_bl.clear()
         self._uni_fun.clear()
         self._last_selected_eids = []
         self._points_cache.clear()
@@ -555,9 +532,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.meta_by_eid.update(result["meta_by_eid"])
             self._uni_recipe = result["unique_values"]["recipe"]
             self._uni_die = result["unique_values"]["die"]
-            self._uni_area = result["unique_values"]["area"]
-            self._uni_wl = result["unique_values"]["wordline"]
-            self._uni_bl = result["unique_values"]["bitline"]
             self._uni_fun = result["unique_values"]["function"]
 
             self._prime_function_row_cache()
@@ -601,9 +575,6 @@ class MainWindow(QtWidgets.QMainWindow):
             restrict_device_id=self.filter_device_restrict_cb.isChecked(),
             recipe=self.recipe_combo.currentData(),
             die_number=self.die_combo.currentData(),
-            subdie_area=self.subdie_combo.currentData(),
-            wordline=self.wordline_combo.currentData(),
-            bitline=self.bitline_combo.currentData(),
             function_type=self.function_combo.currentData(),
         )
 
@@ -643,12 +614,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if filters.recipe and str(data.get("recipe_name", "")) != str(filters.recipe):
             return False
         if filters.die_number not in (None, "") and data.get("die_number") != int(filters.die_number):
-            return False
-        if filters.subdie_area not in (None, "") and data.get("cross_sectional_area_um2") != int(filters.subdie_area):
-            return False
-        if filters.wordline not in (None, "") and data.get("wordline") != int(filters.wordline):
-            return False
-        if filters.bitline not in (None, "") and data.get("bitline") != int(filters.bitline):
             return False
         if filters.function_type and str(data.get("function_type", "")) != str(filters.function_type):
             return False
@@ -791,81 +756,80 @@ class MainWindow(QtWidgets.QMainWindow):
         if not eids:
             return
 
-        self.plot_v.ax.clear()
-        self.plot_logr.ax.clear()
-        self.plot_iv.ax.clear()
+        self.plot_transfer.ax.clear()
+        self.plot_output.ax.clear()
 
         colors = matplotlib.rcParams["axes.prop_cycle"].by_key()["color"]
-        current_x_offset = 0
 
-        x1_mode, y1_mode = self.plot_v.get_modes()
-        x2_mode, y2_mode = self.plot_logr.get_modes()
-        x3_mode, y3_mode = self.plot_iv.get_modes()
+        x_transfer_mode, y_transfer_mode = self.plot_transfer.get_modes()
+        x_output_mode, y_output_mode = self.plot_output.get_modes()
 
-        any_plotted = False
+        any_transfer_plotted = False
+        any_output_plotted = False
+        output_plot_series_count = 0
+
         for i, eid in enumerate(eids):
             data = self._points_cache.get(int(eid))
+            meta = self.meta_by_eid.get(int(eid))
             if not data:
                 continue
 
             color = colors[i % len(colors)]
-            voltage = data["V"]
-            resistance = data["R"]
-            current = data["I"]
-            point_count = int(voltage.shape[0])
+            function_type = meta.get("function_type", "")
 
-            if PLOT_MODE == "OVERLAP":
-                x_base = np.arange(point_count, dtype=float)
-            else:
-                x_base = np.arange(point_count, dtype=float) + float(current_x_offset)
+            if function_type == "TFT_Transfer" and "v_gs_V" in data and "i_ds_A" in data:
+                v_gs, i_ds = data["v_gs_V"], data["i_ds_A"]
+                mask = np.isfinite(v_gs) & np.isfinite(i_ds)
+                if not mask.any():
+                    continue
 
-            if np.isfinite(voltage).any():
-                x1 = apply_mode(x_base, x1_mode, is_index=True)
-                y1 = apply_mode(voltage, y1_mode, is_index=False)
-                self.plot_v.ax.plot(x1, y1, color=color, alpha=0.8, label=f"ID:{eid}")
-                any_plotted = True
+                x_plot = apply_mode(v_gs[mask], x_transfer_mode, is_index=False)
+                y_plot = apply_mode(i_ds[mask], y_transfer_mode, is_index=False)
+                self.plot_transfer.ax.plot(x_plot, y_plot, color=color, alpha=0.8, label=f"ID:{eid}")
+                any_transfer_plotted = True
 
-            if np.isfinite(resistance).any():
-                x2 = apply_mode(x_base, x2_mode, is_index=True)
-                y2 = apply_mode(resistance, y2_mode, is_index=False)
-                self.plot_logr.ax.plot(x2, y2, color=color, alpha=0.8, label=f"ID:{eid}")
-                any_plotted = True
+            elif function_type == "TFT_Output" and "v_gs_V" in data and "v_ds_V" in data and "i_ds_A" in data:
+                v_gs, v_ds, i_ds = data["v_gs_V"], data["v_ds_V"], data["i_ds_A"]
+                datasets = group_data_for_tft_output(v_gs, v_ds, i_ds)
 
-            mask = np.isfinite(voltage) & np.isfinite(current)
-            if mask.any():
-                x3 = apply_mode(voltage[mask], x3_mode, is_index=False)
-                y3 = apply_mode(current[mask], y3_mode, is_index=False)
-                if IV_PLOT_STYLE == "LINE":
-                    self.plot_iv.ax.plot(x3, y3, color=color, linewidth=1.2, alpha=0.7)
-                else:
-                    self.plot_iv.ax.scatter(x3, y3, color=color, s=6, alpha=0.6)
-                any_plotted = True
+                for sweep_data in datasets:
+                    x_data, y_data = sweep_data["x"], sweep_data["y"]
+                    mask = np.isfinite(x_data) & np.isfinite(y_data)
+                    if not mask.any():
+                        continue
 
-            current_x_offset += point_count
+                    x_plot = apply_mode(x_data[mask], x_output_mode, is_index=False)
+                    y_plot = apply_mode(y_data[mask], y_output_mode, is_index=False)
+                    
+                    # Use a cycling color for each Vgs sweep
+                    sweep_color = colors[output_plot_series_count % len(colors)]
+                    label = f"ID:{eid} {sweep_data['label']}"
+                    self.plot_output.ax.plot(x_plot, y_plot, color=sweep_color, alpha=0.8, label=label)
+                    any_output_plotted = True
+                    output_plot_series_count += 1
 
-        if not any_plotted:
+        if not any_transfer_plotted and not any_output_plotted:
             self._show_plot_message(self.NO_VALID_POINTS_MESSAGE)
             return
 
-        self.plot_v.ax.set_xlabel(label_mode("index", x1_mode, is_index=True))
-        self.plot_v.ax.set_ylabel(label_mode("V (V)", y1_mode, is_index=False))
+        self.plot_transfer.ax.set_xlabel(label_mode("Vgs (V)", x_transfer_mode))
+        self.plot_transfer.ax.set_ylabel(label_mode("Ids (A)", y_transfer_mode))
 
-        self.plot_logr.ax.set_xlabel(label_mode("index", x2_mode, is_index=True))
-        self.plot_logr.ax.set_ylabel(label_mode("R (ohm)", y2_mode, is_index=False))
+        self.plot_output.ax.set_xlabel(label_mode("Vds (V)", x_output_mode))
+        self.plot_output.ax.set_ylabel(label_mode("Ids (A)", y_output_mode))
 
-        self.plot_iv.ax.set_xlabel(label_mode("V (V)", x3_mode, is_index=False))
-        self.plot_iv.ax.set_ylabel(label_mode("I (A)", y3_mode, is_index=False))
-
-        for panel in (self.plot_v, self.plot_logr, self.plot_iv):
+        for panel in (self.plot_transfer, self.plot_output):
             panel.ax.grid(True, alpha=0.2)
 
-        if len(eids) > 1:
-            self.plot_logr.ax.legend(fontsize="x-small", loc="upper right", ncol=min(len(eids), 4))
+        if any_transfer_plotted:
+            self.plot_transfer.ax.legend(fontsize="x-small", loc="best")
+        if any_output_plotted:
+            self.plot_output.ax.legend(fontsize="x-small", loc="best", ncol=2)
 
-        self.plot_iv.ensure_xlabel_visible(bottom=0.2)
-        self.plot_v.canvas.draw_idle()
-        self.plot_logr.canvas.draw_idle()
-        self.plot_iv.canvas.draw_idle()
+        self.plot_transfer.ensure_xlabel_visible(bottom=0.2)
+        self.plot_output.ensure_xlabel_visible(bottom=0.2)
+        self.plot_transfer.canvas.draw_idle()
+        self.plot_output.canvas.draw_idle()
 
     # Metadata panel
 

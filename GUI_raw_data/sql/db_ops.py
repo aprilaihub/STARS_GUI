@@ -16,12 +16,11 @@ from typing import Any, Callable, Optional
 
 import numpy as np
 
-DEFAULT_DATABASE_BASENAME = "Memristor_Database.db"
+DEFAULT_DATABASE_BASENAME = "TFT_Database.db"
 
 _FUNCTION_TABLE_MAP = {
-    "CurveTracer": "Function_CurveTracer",
-    "ParameterFit": "Function_ParameterFit",
-    "ParameterFit_interRetention": "Function_ParameterFit_interRetention",
+    "TFT_Transfer": "Function_TFT_Transfer",
+    "TFT_Output": "Function_TFT_Output",
 }
 
 
@@ -202,9 +201,9 @@ def preload_metadata_cache(
         "E.function_config_id AS function_config_id",
         "E.experiment_name AS experiment_name",
         "FC.function_type AS function_type",
-        "DV.wordline AS wordline",
-        "DV.bitline AS bitline",
-        "S.cross_sectional_area_um2 AS cross_sectional_area_um2",
+        "DV.device_name AS device_name",
+        "DV.channel_width_um AS channel_width_um",
+        "DV.channel_length_um AS channel_length_um",
         "D.die_number AS die_number",
         "R.recipe_name AS recipe_name",
     ]
@@ -247,9 +246,6 @@ def preload_metadata_cache(
     unique_values = {
         "recipe": set(),
         "die": set(),
-        "area": set(),
-        "wordline": set(),
-        "bitline": set(),
         "function": set(),
     }
 
@@ -271,12 +267,6 @@ def preload_metadata_cache(
             unique_values["recipe"].add(str(data["recipe_name"]))
         if data.get("die_number") is not None:
             unique_values["die"].add(int(data["die_number"]))
-        if data.get("cross_sectional_area_um2") is not None:
-            unique_values["area"].add(int(data["cross_sectional_area_um2"]))
-        if data.get("wordline") is not None:
-            unique_values["wordline"].add(int(data["wordline"]))
-        if data.get("bitline") is not None:
-            unique_values["bitline"].add(int(data["bitline"]))
         if data.get("function_type"):
             unique_values["function"].add(str(data["function_type"]))
 
@@ -311,7 +301,7 @@ def fetch_experiment_points(
     for eid in eids:
         cur.execute(
             """
-            SELECT resistance_ohm, amplitude_V, read_voltage_V
+            SELECT v_gs_V, v_ds_V, i_ds_A
             FROM Experimental_Detail
             WHERE experiment_id = ?
             ORDER BY id
@@ -320,26 +310,22 @@ def fetch_experiment_points(
         )
         points = cur.fetchall()
         if points:
-            amp_v = np.array([safe_float(point["amplitude_V"]) for point in points], dtype=float)
-            read_v = np.array([safe_float(point["read_voltage_V"]) for point in points], dtype=float)
-            resistance = np.array([safe_float(point["resistance_ohm"]) for point in points], dtype=float)
-
-            voltage = np.where(np.isfinite(amp_v), amp_v, read_v)
-            eps = 1e-30
-            current = voltage / (resistance + np.sign(resistance) * eps)
+            v_gs = np.array([safe_float(p["v_gs_V"]) for p in points], dtype=float)
+            v_ds = np.array([safe_float(p["v_ds_V"]) for p in points], dtype=float)
+            i_ds = np.array([safe_float(p["i_ds_A"]) for p in points], dtype=float)
 
             point_cache[eid] = {
-                "V": voltage,
-                "R": resistance,
-                "I": current,
+                "v_gs_V": v_gs,
+                "v_ds_V": v_ds,
+                "i_ds_A": i_ds,
                 "n": np.array([len(points)], dtype=int),
             }
             fetched_point_count += len(points)
         else:
             point_cache[eid] = {
-                "V": np.empty(0, dtype=float),
-                "R": np.empty(0, dtype=float),
-                "I": np.empty(0, dtype=float),
+                "v_gs_V": np.empty(0, dtype=float),
+                "v_ds_V": np.empty(0, dtype=float),
+                "i_ds_A": np.empty(0, dtype=float),
                 "n": np.array([0], dtype=int),
             }
         fetched_exp_count += 1

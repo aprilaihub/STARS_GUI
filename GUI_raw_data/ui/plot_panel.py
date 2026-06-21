@@ -33,10 +33,10 @@ class MplPanel(QtWidgets.QWidget):
         self.combo_x = QtWidgets.QComboBox()
         self.combo_y = QtWidgets.QComboBox()
         self.combo_x.addItems(["linear", "log10"])
-        self.combo_y.addItems(["linear", "log10"])
+        self.combo_y.addItems(["linear", "log10", "sqrt"])
 
         self.combo_x.setCurrentText(default_x if default_x in ("linear", "log10") else "linear")
-        self.combo_y.setCurrentText(default_y if default_y in ("linear", "log10") else "linear")
+        self.combo_y.setCurrentText(default_y if default_y in ("linear", "log10", "sqrt") else "linear")
 
         header = QtWidgets.QWidget()
         header_layout = QtWidgets.QHBoxLayout(header)
